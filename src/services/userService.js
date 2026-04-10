@@ -9,17 +9,19 @@ export const getAllUsers = () => {
 export const getUserById = (id) => {
   return axiosInstance.get(`/users/${id}`);
 };
+// Récupérer un le profile de l'utilisateur connectee  
+export const getProfile = () => {
+  return axiosInstance.get("/users/profile");
+};
 
 // Créer un nouvel utilisateur
 export const createUser = (userData) => {
   return axiosInstance.post('/users', userData);
 };
-
-// Mettre à jour un utilisateur
-export const updateUser = (id, userData) => {
-  return axiosInstance.put(`/users/${id}`, userData);
+// userService.ts
+export const updateUser = (userData) => {
+  return axiosInstance.put('/users', userData);
 };
-
 // Supprimer un utilisateur
 export const deleteUser = (id) => {
   return axiosInstance.delete(`/users/${id}`);

@@ -5,6 +5,7 @@ import C_button from '../../componnents/C_button';
 import C_header from '../../componnents/C_header';
 import C_inputfields from '../../componnents/C_inputfields';
 import C_link from '../../componnents/C_link';
+import C_text from '../../componnents/C_text';
 
 
 export default function RegisterScreen({ navigation }) {
@@ -39,7 +40,7 @@ export default function RegisterScreen({ navigation }) {
             <View style={styles.overlay}>
             <View style={styles.Card}>
               <Image source={require("../../assets/logo.png")} style={styles.logo} />
-              <C_header text ="Inscrivez vous maintenant!" textstyle={styles.welcome}/>
+              <C_text text ="Inscrivez vous maintenant!" textstyle={styles.welcome}/>
                 <C_inputfields 
                 icon={"mail"}
                 size={24}
@@ -53,7 +54,8 @@ export default function RegisterScreen({ navigation }) {
                 size={24}
                 icon={"lock-closed"}
                 placeholder="Password" 
-                secureTextEntry={true} 
+                secureTextEntry={true}
+                placeholdercolor='black' 
                 value={password}
                 onChangeText={setPassword}
                 containerstyle={styles.inputCard}  
@@ -64,6 +66,7 @@ export default function RegisterScreen({ navigation }) {
                 icon={"lock-closed"}
                 placeholder="Confirm Password" 
                 secureTextEntry={true} 
+                placeholdercolor='black'
                 value={confirmPassword}
                 onChangeText={setConfirmPassword}
                 containerstyle={styles.inputCard}  
@@ -131,7 +134,7 @@ const styles = StyleSheet.create({
   },
   logo:{
     width: 250,
-    height: 250,
+    height: 200,
     borderRadius: 125,
     alignSelf: 'center',
   },

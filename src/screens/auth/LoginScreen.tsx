@@ -15,6 +15,7 @@ export default function LoginScreen({ navigation }) {
 
   const handleLogin = async () => {
     try {
+      console.log('Tentative login avec:', email, password);
       const response = await loginUser(email, password);
       const { token, user } = response.data;
 

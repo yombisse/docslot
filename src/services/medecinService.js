@@ -1,23 +1,26 @@
-// src/services/medecinService.js
 import axiosInstance from '../api/axiosIstance';
 
-// Récupérer tous les médecins
+// 🔎 Tous les médecins
 export const getAllMedecins = () => {
   return axiosInstance.get('/medecins');
 };
 
-
-// Récupérer tous les médecins disponnibles
+// Médecins disponibles
 export const getAllMedecinsDisponibles = () => {
   return axiosInstance.get('/medecins/available');
 };
 
-// Récupérer un médecin par ID
+// Détails d’un médecin
 export const getMedecinById = (id) => {
   return axiosInstance.get(`/medecins/${id}`);
 };
 
-// Créer un médecin
+// créneaux disponibles d’un médecin
+export const getCreneauxByMedecin = (id_medecin) => {
+  return axiosInstance.get(`/medecins/${id_medecin}/slots`);
+};
+
+// ➕ Créer un médecin
 export const createMedecin = (medecinData) => {
   return axiosInstance.post('/medecins', medecinData);
 };
@@ -27,7 +30,7 @@ export const updateMedecin = (id, medecinData) => {
   return axiosInstance.put(`/medecins/${id}`, medecinData);
 };
 
-// Supprimer un médecin
+//Supprimer un médecin
 export const deleteMedecin = (id) => {
   return axiosInstance.delete(`/medecins/${id}`);
 };

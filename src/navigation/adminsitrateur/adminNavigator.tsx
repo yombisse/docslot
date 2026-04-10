@@ -9,7 +9,6 @@ const AdminNavigator = () => {
   return (
     <Stack.Navigator screenOptions={{headerShown:false}}>
       <Stack.Screen name="DashboardAdmin" component={DashboardAdmin} />
-       <Stack.Screen name="AddMedecin" component={AddMedecin} />
     </Stack.Navigator>
   )
 }

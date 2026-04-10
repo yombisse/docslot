@@ -7,10 +7,9 @@ export const getAllRendezvous = () => {
 };
 
 // Récupérer mes rendez-vous (patient connecté)
-export const getMyRendezvous = () => {
-  return axiosInstance.get('/rendezvous/myrdv');
+export const getMyRendezvous = (view = 'agenda') => {
+  return axiosInstance.get(`/rendezvous/myrdv?view=${view}`);
 };
-
 // Récupérer un rendez-vous par ID
 export const getRendezvousById = (id) => {
   return axiosInstance.get(`/rendezvous/${id}`);
@@ -21,12 +20,12 @@ export const createRendezvous = (rdvData) => {
   return axiosInstance.post('/rendezvous', rdvData);
 };
 
-// Confirmer un rendez-vous
-export const confirmRendezvous = (id, data) => {
-  return axiosInstance.put(`/rendezvous/${id}/confirm`, data);
+// CONFIRMER RDV (juste ID)
+export const confirmRendezvous = (id) => {
+  return axiosInstance.put(`/rendezvous/${id}/confirm`);
 };
 
-// Annuler un rendez-vous
-export const cancelRendezvous = (id, data) => {
-  return axiosInstance.put(`/rendezvous/${id}/cancel`, data);
+// ANNULER RDV (juste ID)
+export const cancelRendezvous = (id) => {
+  return axiosInstance.put(`/rendezvous/${id}/cancel`);
 };

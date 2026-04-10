@@ -1,74 +1,105 @@
-// src/screens/MedecinListScreen.js
+// src/screens/MedecinListScreen.tsx
 import React, { useEffect, useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Alert } from 'react-native';
+import { View, Text, StyleSheet, Alert } from 'react-native';
 import CustomFlatList from '../../componnents/C_Flatlist';
-import {getAllMedecinsDisponibles} from '../../services/medecinService';
+import { getAllMedecinsDisponibles } from '../../services/medecinService';
 import C_header from '../../componnents/C_header';
+import C_button from '../../componnents/C_button';
+import { Card, Divider } from 'react-native-paper';
+import { createRendezvous } from '../../services/rdvService';
 
-
-const ListMedecinsDisponnibles = ({navigation})=>{
+const ListMedecinsDisponibles = ({ navigation }) => {
   const [medecins, setMedecins] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchMedecins = async () => {
       try {
+        setLoading(true);
         const response = await getAllMedecinsDisponibles();
-        setMedecins(response.data);
+        console.log('Médecins disponibles', response.data); // debug
+        if (response.data.success && response.data.data) {
+          setMedecins(response.data.data);
+        } else {
+          setMedecins([]);
+          Alert.alert('Info', 'Aucun médecin disponible');
+        }
       } catch (error) {
-        console.log(error);
+        console.log(error.message ); // debug détaillé
         Alert.alert('Erreur', 'Impossible de charger les médecins');
+      } finally {
+        setLoading(false);
       }
     };
+
     fetchMedecins();
   }, []);
 
+
   const renderItem = ({ item }) => (
-    <View style={styles.itemContainer}>
-      <View style={{ flex: 1 }}>
-        <Text style={styles.name}>{item.nom} {item.prenom}</Text>
-        <Text style={styles.speciality}>{item.specialite}</Text>
-      </View>
+    <Card style={styles.cardContainer} elevation={2}>
+      <Card.Content>
+        <View style={styles.infoContainer}>
+          <View style={{ flex: 1 }}>
+            <Text style={styles.name}>{item.nom} {item.prenom}</Text>
+            <Text style={styles.speciality}>{item.specialite}</Text>
+            <Text style={styles.dispo}>
+              {item.nb_creneaux_disponibles } créneaux disponibles
+            </Text>
+          </View>
 
-      <View style={styles.buttonsContainer}>
-        <TouchableOpacity
-          style={styles.detailButton}
-          onPress={() => navigation.navigate('MedecinDetail', { medecinId: item.id })}
-        >
-          <Text style={styles.buttonText}>Voir détails</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={styles.rdvButton}
-          onPress={() => navigation.navigate('RendezVousForm', { medecinId: item.id })}
-        >
-          <Text style={styles.buttonText}>Prendre rendez-vous</Text>
-        </TouchableOpacity>
-      </View>
-    </View>
+          <C_button
+          title="Voir les créneaux"
+          onPress={() =>
+            navigation.navigate('MedecinCreneaux', { medecin: item })
+          }
+        />
+        </View>
+      </Card.Content>
+      <Divider />
+    </Card>
   );
 
   return (
     <View style={{ flex: 1 }}>
-    <C_header icon='chevron-back' size={30} onclickIcon={()=>navigation.goBack()}/>
-      <CustomFlatList
-        data={medecins}
-        renderItem={renderItem}
-        keyExtractor={(item) => item.id.toString()}
-        title="Liste des Médecins"
+      <C_header
+      text='Prendre un rendez-vous'
+        icon="chevron-back"
+        size={30}
+        onclickIcon={() => navigation.goBack()}
       />
+
+      {loading ? (
+        <Text style={styles.loadingText}>Chargement...</Text>
+      ) : medecins.length === 0 ? (
+        <Text style={{ textAlign: 'center', marginTop: 20 }}>
+          Aucun médecin disponible
+        </Text>
+      ) : (
+        <CustomFlatList
+          data={medecins}
+          renderItem={renderItem}
+          keyExtractor={(item) => item.id_medecin.toString()}
+          title="Médecins disponibles"
+        />
+      )}
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  itemContainer: {
-    flexDirection: 'row',
-    backgroundColor: '#f9f9f9',
-    padding: 15,
-    marginVertical: 5,
+  cardContainer: {
     marginHorizontal: 10,
+    marginVertical: 5,
+    paddingVertical: 10,
     borderRadius: 10,
+    overflow: 'hidden',
+    justifyContent: 'center',
+  },
+  infoContainer: {
+    flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'space-between',
   },
   name: {
     fontSize: 16,
@@ -76,31 +107,21 @@ const styles = StyleSheet.create({
   },
   speciality: {
     fontSize: 14,
-    color: '#555',
+    color: '#2BB673',
     marginTop: 3,
   },
-  buttonsContainer: {
-    flexDirection: 'column',
-    alignItems: 'flex-end',
-  },
-  detailButton: {
-    backgroundColor: '#4e9bde',
-    paddingVertical: 5,
-    paddingHorizontal: 10,
-    borderRadius: 5,
-    marginBottom: 5,
+  dispo: {
+    fontSize: 12,
+    color: '#666',
+    marginTop: 2,
   },
   rdvButton: {
-    backgroundColor: '#28a745',
-    paddingVertical: 5,
-    paddingHorizontal: 10,
+    backgroundColor: '#2BB673',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
     borderRadius: 5,
   },
-  buttonText: {
-    color: '#fff',
-    fontWeight: '600',
-    fontSize: 12,
-  },
+  loadingText: { textAlign: 'center', marginTop: 20, fontSize: 14 },
 });
 
-export default ListMedecinsDisponnibles;
+export default ListMedecinsDisponibles;

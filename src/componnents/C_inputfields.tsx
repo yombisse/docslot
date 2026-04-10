@@ -7,9 +7,11 @@ export default function C_inputfields({
     icon,
     placeholder,
     secureTextEntry,
+    keyboardType,
     onChangeText,
     style,
     containerstyle,
+    placeholdercolor='black',
     size,
     color,
     iconstyle
@@ -18,9 +20,11 @@ export default function C_inputfields({
         icon?:any,
         placeholder: string,
         secureTextEntry:boolean, 
+        keyboardType?: any,
         onChangeText: (text: string) => void, 
         style?: any,
         containerstyle?: any,
+        placeholdercolor:string,
         iconstyle?: any,
         size: number,
         color: string 
@@ -32,9 +36,11 @@ export default function C_inputfields({
       {icon && <Ionicons name={icon} size={size} color={color} style={[styles.icon, iconstyle]} />}
       <TextInput style={[styles.input,style]}
         placeholder={placeholder}
+        placeholderTextColor={placeholdercolor}
         onChangeText={onChangeText}
         value={value}
         secureTextEntry={secureTextEntry}
+        keyboardType={keyboardType}
       />
     </View>
   )
@@ -60,6 +66,7 @@ const styles = StyleSheet.create({
         width: 200,
         height: 40,
         paddingHorizontal: 10,
+        color:'black'
     },
 
 })

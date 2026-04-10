@@ -4,15 +4,9 @@ import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import Ionicons from "react-native-vector-icons/Ionicons";
 import AdminNavigator from "./adminNavigator";
 import ListMedecins from "../../screens/medecin/ListMedecins";
+import MedecinNavigator from "../medecin/medecinNavigator";
 
 
-function MesRendezvous() {
-  return (
-    <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
-      <Text>Mes Rendez-vous</Text>
-    </View>
-  );
-}
 
 function Profile() {
   return (
@@ -49,8 +43,7 @@ export default function AdminTabs() {
       })}
     >
       <Tab.Screen name="Dashboard" component={AdminNavigator} />
-      <Tab.Screen name="MesRendezvous" component={MesRendezvous} />
-      <Tab.Screen name="Medecins" component={ListMedecins} />
+      <Tab.Screen name="Medecins" component={MedecinNavigator} />
       <Tab.Screen name="Profile" component={Profile} />
     </Tab.Navigator>
   );
