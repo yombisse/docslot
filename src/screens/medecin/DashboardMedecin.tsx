@@ -10,13 +10,12 @@ import {
 
 import { useFocusEffect } from '@react-navigation/native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
-
-import C_header from '../../componnents/C_header';
 import C_button from '../../componnents/C_button';
-
+import ProfileMenu from '../auth/ProfileMenu';
 import { getProfile } from '../../services/userService';
 import { getMyRendezvous } from '../../services/rdvService';
 import { getUnreadCount } from '../../services/notificationsService';
+import { logout } from '../../services/authService';
 
 export default function DashboardMedecin({ navigation }) {
 
@@ -25,7 +24,7 @@ export default function DashboardMedecin({ navigation }) {
   const [loading, setLoading] = useState(true);
   const [unread, setUnread] = useState(0);
 
-  // ===================== CHARGEMENT COMPLET =====================
+  // ===================== DATA =====================
   const fetchData = async () => {
     try {
       setLoading(true);
@@ -50,7 +49,7 @@ export default function DashboardMedecin({ navigation }) {
     }
   };
 
-  // ===================== NOTIFICATIONS =====================
+  // ===================== NOTIFS =====================
   const loadUnread = async () => {
     try {
       const res = await getUnreadCount();
@@ -60,12 +59,10 @@ export default function DashboardMedecin({ navigation }) {
     }
   };
 
-  // ===================== INIT =====================
   useEffect(() => {
     fetchData();
   }, []);
 
-  // ===================== REFRESH À CHAQUE NAVIGATION =====================
   useFocusEffect(
     useCallback(() => {
       loadUnread();
@@ -73,7 +70,15 @@ export default function DashboardMedecin({ navigation }) {
     }, [])
   );
 
-  // ===================== RENDER RDV =====================
+
+  const handleLogout = async () => {
+    const result = await logout();
+
+    if (result) {
+      navigation.replace('Login'); // ou AuthScreen
+    }
+  };
+  // ===================== RDV ITEM =====================
   const renderItem = ({ item }) => (
     <View style={styles.card}>
       <Text style={styles.time}>
@@ -89,7 +94,7 @@ export default function DashboardMedecin({ navigation }) {
     </View>
   );
 
-  // ===================== LOADER =====================
+  // ===================== LOADING =====================
   if (loading) {
     return (
       <View style={styles.loader}>
@@ -102,7 +107,7 @@ export default function DashboardMedecin({ navigation }) {
   return (
     <View style={styles.container}>
 
-      {/* HEADER PRO AVEC NOTIF */}
+      {/* HEADER */}
       <View style={styles.header}>
 
         <Text style={styles.headerTitle}>
@@ -111,7 +116,7 @@ export default function DashboardMedecin({ navigation }) {
 
         <View style={styles.headerIcons}>
 
-          {/* NOTIF */}
+          {/* NOTIFICATIONS */}
           <TouchableOpacity
             onPress={() => navigation.navigate('Notification')}
             style={{ position: 'relative' }}
@@ -127,10 +132,22 @@ export default function DashboardMedecin({ navigation }) {
             )}
           </TouchableOpacity>
 
-          {/* PROFILE */}
-          <TouchableOpacity>
-            <Ionicons name="person-circle-outline" size={30} color="#fff" />
-          </TouchableOpacity>
+          {/* PROFILE DROPDOWN */}
+          <ProfileMenu
+            navigation={navigation}
+            icon="person-circle-outline"
+            items={[
+              {
+                icon: "log-out",
+                label: "Deconnexion",
+                onPress: () =>
+                  navigation.navigate('Auth', {
+                    screen: 'Login',
+                  }),
+              },
+
+            ]}
+          />
 
         </View>
       </View>
@@ -138,12 +155,10 @@ export default function DashboardMedecin({ navigation }) {
       {/* BODY */}
       <View style={styles.bodycontainer}>
 
-        {/* BIENVENUE */}
         <Text style={styles.welcome}>
           Bienvenue Dr {user.nom} {user.prenom}
         </Text>
 
-        {/* RDV */}
         <Text style={styles.sectionTitle}>
           Rendez-vous aujourd’hui
         </Text>
@@ -160,7 +175,6 @@ export default function DashboardMedecin({ navigation }) {
           />
         )}
 
-        {/* ACTIONS */}
         <View style={styles.actions}>
 
           <C_button
@@ -175,9 +189,7 @@ export default function DashboardMedecin({ navigation }) {
 
           <C_button
             title="Voir agenda"
-            onPress={() =>
-              navigation.navigate('MesRendezvous')
-            }
+            onPress={() => navigation.navigate('MesRendezvous')}
             style={styles.btnOutline}
             textstyle={{ color: '#2BB673' }}
           />
@@ -217,7 +229,8 @@ const styles = StyleSheet.create({
 
   headerIcons: {
     flexDirection: 'row',
-    gap: 12,
+    alignItems: 'center',
+    gap: 15,
   },
 
   badge: {

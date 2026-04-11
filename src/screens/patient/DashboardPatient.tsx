@@ -18,6 +18,7 @@ import { getProfile } from '../../services/userService';
 import { getMyRendezvous } from '../../services/rdvService';
 import { getUnreadCount } from '../../services/notificationsService';
 import { formatDate } from '../../utils/formateDate';
+import { logout } from '../../services/authService';
 
 const DashboardPatient = ({ navigation }) => {
 
@@ -67,6 +68,12 @@ const DashboardPatient = ({ navigation }) => {
         console.log('Erreur notif badge', e);
       }
     };
+      const handleLogout = async () => {
+        const result = await logout();
+        if (result) {
+          navigation.replace('Login'); // ou AuthScreen
+        }
+      };
   
     // ===================== INIT =====================
     useEffect(() => {

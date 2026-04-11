@@ -24,6 +24,17 @@ export const changePassword = (passwords) => {
 };
 
 
-export const logoutUser = () => {
-  return axiosInstance.post('/auth/logout');
+
+import { deleteToken } from '../store/tokenservice';
+
+export const logout = async () => {
+  try {
+    // 1. Supprimer le token du Keychain
+    await deleteToken();
+
+    return true;
+  } catch (error) {
+    console.log('Erreur logout:', error);
+    return false;
+  }
 };

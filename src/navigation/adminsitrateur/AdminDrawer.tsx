@@ -8,16 +8,8 @@ import Medecinstack from "./GestionUsers/Medecinstack";
 import Patientstack from "./GestionUsers/Patientstack";
 import Userstack from "./GestionUsers/Userstack";
 import NotificationScreen from "../../screens/patient/NotificationScreen";
+import { logout } from '../../services/authService';
 
-
-
-function Parametres() {
-  return (
-    <View style={styles.screen}>
-      <Text style={styles.title}>Paramètres</Text>
-    </View>
-  );
-}
 
 const Drawer = createDrawerNavigator();
 
