@@ -2,33 +2,14 @@ import React from "react";
 import { View, Text, StyleSheet } from "react-native";
 import { createDrawerNavigator } from "@react-navigation/drawer";
 import Ionicons from "react-native-vector-icons/Ionicons";
-import AdminTabs from "./AdminTab";
+import AdminNavigator from "./adminNavigator";
+import RdvStack from "../patient/rdvStack";
+import Medecinstack from "./GestionUsers/Medecinstack";
+import Patientstack from "./GestionUsers/Patientstack";
+import Userstack from "./GestionUsers/Userstack";
+import NotificationScreen from "../../screens/patient/NotificationScreen";
 
 
-
-function Patients() {
-  return (
-    <View style={styles.screen}>
-      <Text style={styles.title}>Gestion des Patients</Text>
-    </View>
-  );
-}
-
-function RendezVous() {
-  return (
-    <View style={styles.screen}>
-      <Text style={styles.title}>Gestion des Rendez-vous</Text>
-    </View>
-  );
-}
-
-function Medecins() {
-  return (
-    <View style={styles.screen}>
-      <Text style={styles.title}>Gestion des Médecins</Text>
-    </View>
-  );
-}
 
 function Parametres() {
   return (
@@ -54,8 +35,8 @@ export default function AdminDrawer() {
       }}
     >
       <Drawer.Screen
-        name="AdminDrawer"
-        component={AdminTabs}
+        name="Dashboard"
+        component={AdminNavigator}
         options={{
           drawerIcon: ({ color, size }) => (
             <Ionicons name="home-outline" size={size} color={color} />
@@ -63,8 +44,8 @@ export default function AdminDrawer() {
         }}
       />
       <Drawer.Screen
-        name="Patients"
-        component={Patients}
+        name="Utilisateurs"
+        component={Userstack}
         options={{
           drawerIcon: ({ color, size }) => (
             <Ionicons name="people-outline" size={size} color={color} />
@@ -72,29 +53,40 @@ export default function AdminDrawer() {
         }}
       />
       <Drawer.Screen
-        name="RendezVous"
-        component={RendezVous}
+        name="Patients"
+        component={Patientstack}
         options={{
           drawerIcon: ({ color, size }) => (
-            <Ionicons name="calendar-outline" size={size} color={color} />
+            <Ionicons name="people-outline" size={size} color={color} />
           ),
         }}
       />
       <Drawer.Screen
         name="Medecins"
-        component={Medecins}
+        component={Medecinstack}
         options={{
           drawerIcon: ({ color, size }) => (
             <Ionicons name="medkit-outline" size={size} color={color} />
           ),
         }}
       />
+      
       <Drawer.Screen
-        name="Parametres"
-        component={Parametres}
+        name="RendezVous"
+        component={RdvStack}
         options={{
           drawerIcon: ({ color, size }) => (
-            <Ionicons name="settings-outline" size={size} color={color} />
+            <Ionicons name="calendar-outline" size={size} color={color} />
+          ),
+        }}
+      />
+      
+      <Drawer.Screen
+        name="Notifications"
+        component={NotificationScreen}
+        options={{
+          drawerIcon: ({ color, size }) => (
+            <Ionicons name="notifications-outline" size={size} color={color} />
           ),
         }}
       />

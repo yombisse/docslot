@@ -43,7 +43,6 @@ const ModalGeneric = ({
 
           {showInput && (
             <C_inputfields
-              style={styles.input}
               placeholder={inputPlaceholder}
               value={inputValue}
               onChangeText={setInputValue}

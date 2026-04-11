@@ -26,3 +26,14 @@ export const updateUser = (userData) => {
 export const deleteUser = (id) => {
   return axiosInstance.delete(`/users/${id}`);
 };
+
+
+//  Stats principales dashboard admin
+export const getAdminStats = () => {
+  return axiosInstance.get('/admin/stats');
+};
+
+// Stats détaillées des rendez-vous
+export const getRdvStats = () => {
+  return axiosInstance.get('/admin/rdv-stats');
+};

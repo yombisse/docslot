@@ -21,6 +21,7 @@ const RootNavigator = () => {
         <Stack.Screen name="Medecin" component={MedecinTabs} />
         <Stack.Screen name="Admin" component={AdminDrawer} />
         
+        
     </Stack.Navigator>
   )
 }

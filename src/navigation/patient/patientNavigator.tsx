@@ -3,6 +3,7 @@ import { createStackNavigator } from '@react-navigation/stack';
 import DashboardPatient from '../../screens/patient/DashboardPatient';
 import MedecinListScreen from '../../screens/medecin/ListMedecinsDisponnibles';
 import UpdateProfileScreen from '../../screens/patient/updateProfile';
+import NotificationScreen from '../../screens/patient/NotificationScreen';
 
 const Stack = createStackNavigator();
 
@@ -12,6 +13,7 @@ const PatientNavigator = () => {
       <Stack.Screen name="DashboardPatient" component={DashboardPatient} />
       <Stack.Screen name="ListMedecins" component={MedecinListScreen}/>
       <Stack.Screen name="MonProfile" component={UpdateProfileScreen}/>
+      <Stack.Screen name="Notification" component={NotificationScreen}/>
     </Stack.Navigator>
   )
 }

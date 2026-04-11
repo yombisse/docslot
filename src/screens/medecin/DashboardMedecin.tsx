@@ -1,26 +1,31 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import {
   View,
   Text,
   StyleSheet,
   FlatList,
   ActivityIndicator,
+  TouchableOpacity,
 } from 'react-native';
+
+import { useFocusEffect } from '@react-navigation/native';
+import Ionicons from 'react-native-vector-icons/Ionicons';
 
 import C_header from '../../componnents/C_header';
 import C_button from '../../componnents/C_button';
+
 import { getProfile } from '../../services/userService';
 import { getMyRendezvous } from '../../services/rdvService';
+import { getUnreadCount } from '../../services/notificationsService';
 
 export default function DashboardMedecin({ navigation }) {
+
   const [user, setUser] = useState({});
   const [rdvs, setRdvs] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [unread, setUnread] = useState(0);
 
-  useEffect(() => {
-    fetchData();
-  }, []);
-
+  // ===================== CHARGEMENT COMPLET =====================
   const fetchData = async () => {
     try {
       setLoading(true);
@@ -29,6 +34,7 @@ export default function DashboardMedecin({ navigation }) {
       setUser(profile.data.data);
 
       const rdvRes = await getMyRendezvous('agenda');
+
       const today = new Date().toISOString().split('T')[0];
 
       const todayRdv = rdvRes.data.data.filter(
@@ -36,6 +42,7 @@ export default function DashboardMedecin({ navigation }) {
       );
 
       setRdvs(todayRdv);
+
     } catch (e) {
       console.log('Erreur dashboard médecin', e);
     } finally {
@@ -43,9 +50,36 @@ export default function DashboardMedecin({ navigation }) {
     }
   };
 
+  // ===================== NOTIFICATIONS =====================
+  const loadUnread = async () => {
+    try {
+      const res = await getUnreadCount();
+      setUnread(res.data.total);
+    } catch (e) {
+      console.log('Erreur notif badge', e);
+    }
+  };
+
+  // ===================== INIT =====================
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  // ===================== REFRESH À CHAQUE NAVIGATION =====================
+  useFocusEffect(
+    useCallback(() => {
+      loadUnread();
+      fetchData();
+    }, [])
+  );
+
+  // ===================== RENDER RDV =====================
   const renderItem = ({ item }) => (
     <View style={styles.card}>
-      <Text style={styles.time}>{item.heure_rdv?.slice(0, 5)}</Text>
+      <Text style={styles.time}>
+        {item.heure_rdv?.slice(0, 5)}
+      </Text>
+
       <View style={{ flex: 1 }}>
         <Text style={styles.motif}>{item.motif}</Text>
         <Text style={styles.patient}>
@@ -55,6 +89,7 @@ export default function DashboardMedecin({ navigation }) {
     </View>
   );
 
+  // ===================== LOADER =====================
   if (loading) {
     return (
       <View style={styles.loader}>
@@ -63,63 +98,101 @@ export default function DashboardMedecin({ navigation }) {
     );
   }
 
+  // ===================== UI =====================
   return (
     <View style={styles.container}>
-      <C_header
-        icon="chevron-back"
-        size={30}
-        text="Dashboard Médecin"
-        onclickIcon={() => navigation.goBack()}
-      />
-      <View style={styles.bodycontainer}>
-      {/* Bienvenue */}
-      <Text style={styles.welcome}>
-        Bienvenue Dr {user.nom} {user.prenom}
-      </Text>
 
-     
-      {/* RDV du jour */}
-      <Text style={styles.sectionTitle}>Rendez-vous aujourd’hui</Text>
+      {/* HEADER PRO AVEC NOTIF */}
+      <View style={styles.header}>
 
-      {rdvs.length === 0 ? (
-        <Text style={styles.empty}>Aucun rendez-vous aujourd’hui</Text>
-      ) : (
-        <FlatList
-          data={rdvs}
-          keyExtractor={(item) => item.id_rdv.toString()}
-          renderItem={renderItem}
-          contentContainerStyle={{ paddingBottom: 30 }}
-        />
-      )}
+        <Text style={styles.headerTitle}>
+          Docslot
+        </Text>
 
-       {/* Boutons actions */}
-      <View style={styles.actions}>
-        <C_button
-          title="Ajouter disponibilité"
-          onPress={() => navigation.navigate('Disponnibilite', {screen:'AddDisponibilite'})}
-          style={styles.btn}
-        />
+        <View style={styles.headerIcons}>
 
-        <C_button
-          title=" Voir mon agenda"
-          onPress={() => navigation.navigate('MesRendezvous')}
-          style={styles.btnOutline}
-          textstyle={{ color: '#2BB673' }}
-        />
+          {/* NOTIF */}
+          <TouchableOpacity
+            onPress={() => navigation.navigate('Notification')}
+            style={{ position: 'relative' }}
+          >
+            <Ionicons name="notifications-outline" size={26} color="#fff" />
+
+            {unread > 0 && (
+              <View style={styles.badge}>
+                <Text style={styles.badgeText}>
+                  {unread > 99 ? '99+' : unread}
+                </Text>
+              </View>
+            )}
+          </TouchableOpacity>
+
+          {/* PROFILE */}
+          <TouchableOpacity>
+            <Ionicons name="person-circle-outline" size={30} color="#fff" />
+          </TouchableOpacity>
+
+        </View>
       </View>
 
-    </View>
+      {/* BODY */}
+      <View style={styles.bodycontainer}>
+
+        {/* BIENVENUE */}
+        <Text style={styles.welcome}>
+          Bienvenue Dr {user.nom} {user.prenom}
+        </Text>
+
+        {/* RDV */}
+        <Text style={styles.sectionTitle}>
+          Rendez-vous aujourd’hui
+        </Text>
+
+        {rdvs.length === 0 ? (
+          <Text style={styles.empty}>
+            Aucun rendez-vous aujourd’hui
+          </Text>
+        ) : (
+          <FlatList
+            data={rdvs}
+            keyExtractor={(item) => item.id_rdv.toString()}
+            renderItem={renderItem}
+          />
+        )}
+
+        {/* ACTIONS */}
+        <View style={styles.actions}>
+
+          <C_button
+            title="Ajouter disponibilité"
+            onPress={() =>
+              navigation.navigate('Disponnibilite', {
+                screen: 'AddDisponibilite',
+              })
+            }
+            style={styles.btn}
+          />
+
+          <C_button
+            title="Voir agenda"
+            onPress={() =>
+              navigation.navigate('MesRendezvous')
+            }
+            style={styles.btnOutline}
+            textstyle={{ color: '#2BB673' }}
+          />
+
+        </View>
+
+      </View>
     </View>
   );
 }
-
 const styles = StyleSheet.create({
+
   container: {
     flex: 1,
     backgroundColor: '#f6f8fb',
-  },
-  bodycontainer:{
-    padding:10,
   },
 
   loader: {
@@ -128,47 +201,58 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
 
-  welcome: {
-    fontSize: 20,
-    fontWeight: '700',
-    marginVertical: 15,
-    color: '#2c3e50',
-  },
-
-  actions: {
+  header: {
+    backgroundColor: '#2BB673',
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: 20,
+    padding: 15,
+    alignItems: 'center',
   },
 
-  btn: {
-    flex: 1,
-    height:50,
-    borderRadius:20,
-    marginLeft: 8,
-    borderWidth: 1,
-    borderColor: '#2BB673',
-    justifyContent:'center',
-    alignItems:'center'
+  headerTitle: {
+    color: '#fff',
+    fontSize: 18,
+    fontWeight: 'bold',
   },
 
-  btnOutline: {
-    flex: 1,
-    height:50,
-    borderRadius:20,
-    marginLeft: 8,
-    backgroundColor: '#fff',
-    borderWidth: 1,
-    borderColor: '#2BB673',
-    justifyContent:'center',
-    alignItems:'center'
+  headerIcons: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+
+  badge: {
+    position: 'absolute',
+    top: -5,
+    right: -8,
+    backgroundColor: 'red',
+    borderRadius: 10,
+    minWidth: 18,
+    height: 18,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 4,
+  },
+
+  badgeText: {
+    color: '#fff',
+    fontSize: 11,
+    fontWeight: 'bold',
+  },
+
+  bodycontainer: {
+    padding: 10,
+  },
+
+  welcome: {
+    fontSize: 18,
+    fontWeight: '700',
+    marginVertical: 15,
   },
 
   sectionTitle: {
-    fontSize: 17,
+    fontSize: 16,
     fontWeight: '700',
     marginBottom: 10,
-    color: '#2c3e50',
   },
 
   empty: {
@@ -189,16 +273,43 @@ const styles = StyleSheet.create({
   time: {
     fontWeight: 'bold',
     color: '#2BB673',
-    marginRight: 12,
+    marginRight: 10,
   },
 
   motif: {
     fontWeight: '600',
-    fontSize: 14,
   },
 
   patient: {
     color: '#555',
     marginTop: 4,
+  },
+
+  actions: {
+    flexDirection: 'row',
+    marginTop: 15,
+    justifyContent: 'space-between',
+  },
+
+  btn: {
+    flex: 1,
+    marginRight: 8,
+    height: 50,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: '#2BB673',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+
+  btnOutline: {
+    flex: 1,
+    height: 50,
+    borderRadius: 10,
+    backgroundColor: '#fff',
+    borderWidth: 1,
+    borderColor: '#2BB673',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 });

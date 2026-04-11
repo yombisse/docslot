@@ -2,8 +2,8 @@ import axios from 'axios';
 import { getToken } from '../store/tokenservice';
 
 const api = axios.create({
- //baseURL: 'http://172.23.196.24:3000/api',
-  baseURL: 'http://10.229.237.24:3000/api',
+ baseURL: 'http://10.161.171.24:3000/api',
+//baseURL: 'http://10.17.108.21:3000/api',
 
 });
 

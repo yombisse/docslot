@@ -1,6 +1,14 @@
-import axiosInstance from '../api/axiosIstance';
+import api from "../api/axiosIstance";
 
-// Récupérer les notifications du patient connecté
-export const getNotifications = () => {
-  return axiosInstance.get('/patients/notifications');
-};
+
+export const getAllNotifications = () =>
+  api.get('/notifications');
+
+export const getUnreadCount = () =>
+  api.get('/notifications/unread-count');
+
+export const getMyNotifications = () =>
+  api.get('/notifications/me');
+
+export const markAsRead = (id) =>
+  api.put(`/notifications/${id}/read`);

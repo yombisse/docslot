@@ -12,7 +12,8 @@ const DisponnibiliteStack = () => {
     >
       
       <Stack.Screen name="MesDisponnibilites" component={MesDisponnibiltes} />
-      <Stack.Screen name="AddDisponibilite" component={AddDisponibilite} />
+       <Stack.Screen name="AddDisponibilite" component={AddDisponibilite} />
+     
     </Stack.Navigator>
   )
 }

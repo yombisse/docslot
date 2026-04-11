@@ -4,6 +4,7 @@ import DashboardMedecin from '../../screens/medecin/DashboardMedecin';
 import AddMedecin from '../../screens/medecin/Addmedecin';
 import AddDisponibilite from '../../screens/medecin/AddDisponnibilite';
 import ListMedecins from '../../screens/medecin/ListMedecins';
+import NotificationScreen from '../../screens/patient/NotificationScreen';
 
 const Stack = createStackNavigator();
 
@@ -17,6 +18,7 @@ const MedecinNavigator = () => {
       <Stack.Screen name="ListMedecins" component={ListMedecins} />
       <Stack.Screen name="AddMedecin" component={AddMedecin} />
       <Stack.Screen name="AddDisponibilite" component={AddDisponibilite} />
+      <Stack.Screen name="Notification" component={NotificationScreen} />
     </Stack.Navigator>
   )
 }

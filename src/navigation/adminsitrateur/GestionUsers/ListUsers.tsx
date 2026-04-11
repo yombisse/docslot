@@ -1,41 +1,58 @@
-// src/screens/MedecinListScreen.tsx
+// src/screens/ListUserScreen.tsx
 import React, { useState, useCallback } from 'react';
 import { View, Text, StyleSheet, Alert, ActivityIndicator } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
-import CustomFlatList from '../../componnents/C_Flatlist';
-import { getAllMedecins } from '../../services/medecinService';
-import C_header from '../../componnents/C_header';
+import CustomFlatList from '../../../componnents/C_Flatlist';
+import { getAllUsers, deleteUser } from '../../../services/userService';
+import C_header from '../../../componnents/C_header';
+import C_button from '../../../componnents/C_button';
 import { Card, Divider } from 'react-native-paper';
-import C_button from '../../componnents/C_button';
 
-const ListMedecins = ({ navigation }) => {
-  const [medecins, setMedecins] = useState([]);
+const ListUserScreen = ({ navigation }) => {
+  const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(false);
 
-  const fetchMedecins = async () => {
+  const fetchUsers = async () => {
     try {
       setLoading(true);
-      const response = await getAllMedecins();
+      const response = await getAllUsers();
 
       if (response.data.success && response.data.data) {
-        setMedecins(response.data.data);
+        setUsers(response.data.data);
       } else {
-        setMedecins([]);
+        setUsers([]);
       }
     } catch (error) {
-      console.log(error);
-      Alert.alert('Erreur', 'Impossible de charger les médecins');
+      Alert.alert('Erreur', 'Impossible de charger les utilisateurs');
     } finally {
       setLoading(false);
     }
   };
 
-  // 🔥 Se relance à chaque focus écran
+  // refresh à chaque retour écran
   useFocusEffect(
     useCallback(() => {
-      fetchMedecins();
+      fetchUsers();
     }, [])
   );
+
+  const handleDelete = (id_user: number) => {
+    Alert.alert(
+      'Confirmer',
+      'Voulez-vous vraiment supprimer cet utilisateur ?',
+      [
+        { text: 'Annuler', style: 'cancel' },
+        {
+          text: 'Supprimer',
+          style: 'destructive',
+          onPress: async () => {
+            await deleteUser(id_user);
+            setUsers(users.filter(u => u.id_user !== id_user));
+          },
+        },
+      ]
+    );
+  };
 
   const renderItem = ({ item }: any) => (
     <Card style={styles.cardContainer} elevation={2}>
@@ -45,7 +62,9 @@ const ListMedecins = ({ navigation }) => {
             <Text style={styles.name}>
               {item.nom} {item.prenom}
             </Text>
-            <Text style={styles.speciality}>{item.specialite}</Text>
+
+            <Text style={styles.details}>📧 {item.email}</Text>
+            <Text style={styles.role}>Rôle : {item.role}</Text>
           </View>
 
           <View style={styles.buttonsRow}>
@@ -57,7 +76,7 @@ const ListMedecins = ({ navigation }) => {
               onPress={() =>
                 navigation.navigate('Detail', {
                 data: item,
-                type: 'medecin'
+                type: 'user'
                 })
               }
             />
@@ -68,10 +87,7 @@ const ListMedecins = ({ navigation }) => {
               color="#fff"
               style={[styles.actionButton, { backgroundColor: '#4e9bde' }]}
               onPress={() =>
-                navigation.navigate('AddMedecin', {
-                  medecinId: item.id_medecin,
-                  medecinData: item,
-                })
+                navigation.navigate('AddUser', { userData: item })
               }
             />
 
@@ -80,20 +96,7 @@ const ListMedecins = ({ navigation }) => {
               size={24}
               color="#fff"
               style={[styles.actionButton, { backgroundColor: '#f44336' }]}
-              onPress={() =>
-                Alert.alert(
-                  'Confirmer',
-                  'Voulez-vous vraiment supprimer ce médecin ?',
-                  [
-                    { text: 'Annuler', style: 'cancel' },
-                    {
-                      text: 'Supprimer',
-                      style: 'destructive',
-                      onPress: () => console.log('Supprimer', item.id_medecin),
-                    },
-                  ]
-                )
-              }
+              onPress={() => handleDelete(item.id_user)}
             />
           </View>
         </View>
@@ -105,40 +108,40 @@ const ListMedecins = ({ navigation }) => {
   return (
     <View style={{ flex: 1 }}>
       <C_header
+        text="Gestion des Utilisateurs"
         icon="chevron-back"
-        text='médécins'
         size={30}
         onclickIcon={() => navigation.goBack()}
       />
 
-      
       {loading ? (
-        <View style={styles.loaderContainer}>
+        <View style={styles.emptyContainer}>
           <ActivityIndicator size="large" color="#2BB673" />
-          <Text style={{ marginTop: 10 }}>Chargement des médecins...</Text>
         </View>
-      ) : medecins.length === 0 ? (
-        <Text style={{ textAlign: 'center', marginTop: 20 }}>
-          Aucun médecin disponible
-        </Text>
+      ) : users.length === 0 ? (
+        <View style={styles.emptyContainer}>
+          <Text style={styles.emptyText}>Aucun utilisateur disponible</Text>
+        </View>
       ) : (
         <CustomFlatList
-          data={medecins}
+          data={users}
           renderItem={renderItem}
-          keyExtractor={(item) => item.id_medecin.toString()}
-          title="Liste des Médecins"
+          keyExtractor={(item) => item.id_user?.toString()}
+          title="Liste des utilisateurs"
         />
       )}
 
       <C_button
         title="+"
-        onPress={() => navigation.navigate('AddMedecin')}
+        onPress={() => navigation.navigate('AddUser')}
         style={styles.addButtonFloating}
         textstyle={{ fontSize: 30, color: '#fff', fontWeight: 'bold' }}
       />
     </View>
   );
 };
+
+export default ListUserScreen;
 
 const styles = StyleSheet.create({
   cardContainer: {
@@ -147,6 +150,7 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     borderRadius: 10,
     overflow: 'hidden',
+    backgroundColor: '#fff',
   },
   infoContainer: {
     flexDirection: 'row',
@@ -156,11 +160,18 @@ const styles = StyleSheet.create({
   name: {
     fontSize: 16,
     fontWeight: '600',
+    color: '#333',
   },
-  speciality: {
+  details: {
     fontSize: 14,
-    color: '#2BB673',
+    color: '#666',
     marginTop: 3,
+  },
+  role: {
+    fontSize: 13,
+    color: '#2BB673',
+    marginTop: 2,
+    fontWeight: '600',
   },
   buttonsRow: {
     flexDirection: 'row',
@@ -169,7 +180,12 @@ const styles = StyleSheet.create({
   },
   actionButton: {
     paddingHorizontal: 10,
+    paddingVertical: 8,
     borderRadius: 5,
+    backgroundColor: '#2BB673',
+    justifyContent: 'center',
+    alignItems: 'center',
+    minWidth: 40,
   },
   addButtonFloating: {
     position: 'absolute',
@@ -183,11 +199,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     elevation: 5,
   },
-  loaderContainer: {
+  emptyContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
   },
+  emptyText: {
+    fontSize: 16,
+    color: '#999',
+  },
 });
-
-export default ListMedecins;

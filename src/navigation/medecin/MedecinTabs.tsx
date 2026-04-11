@@ -4,9 +4,8 @@ import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import Ionicons from "react-native-vector-icons/Ionicons";
 import DashboardMedecin from "../../screens/medecin/DashboardMedecin";
 import DisponnibiliteStack from "./DisponnibiliteStack";
-import MesRendezVous from "../../screens/medecin/MesRendezvous";
-import RendezVousTabs from "../../screens/patient/MesRdv";
 import UpdateProfileScreen from "../../screens/patient/updateProfile";
+import RdvStack from "../patient/rdvStack";
 
 
 const Tab = createBottomTabNavigator();
@@ -36,7 +35,7 @@ export default function MedecinTabs() {
       })}
     >
       <Tab.Screen name="Dashboard" component={DashboardMedecin} />
-      <Tab.Screen name="MesRendezvous" component={RendezVousTabs} />
+      <Tab.Screen name="MesRendezvous" component={RdvStack} />
       <Tab.Screen name="Disponnibilite" component={DisponnibiliteStack} />
       <Tab.Screen name="Profile" component={UpdateProfileScreen} />
     </Tab.Navigator>
