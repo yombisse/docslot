@@ -23,30 +23,34 @@ const AddEditUserScreen = ({ route, navigation }) => {
       Alert.alert('Erreur', 'Tous les champs sont obligatoires');
       return;
     }
-    const Userdata={ 
-        id_user:user.id_user,
-        nom,
-        prenom, 
-        email, 
-        role 
-    }
 
     try {
       setLoading(true);
 
       if (isEdit) {
+        const Userdata = { 
+          id_user: user.id_user,
+          nom,
+          prenom, 
+          email, 
+          role 
+        };
+
         await updateUser(Userdata);
         Alert.alert('Succès', 'Utilisateur modifié avec succès');
+
       } else {
         if (!password) {
           Alert.alert('Erreur', 'Mot de passe obligatoire');
           return;
         }
+
         await createUser({ nom, prenom, email, role, password });
         Alert.alert('Succès', 'Utilisateur ajouté avec succès');
       }
 
       navigation.goBack();
+
     } catch (error) {
       console.error(error);
       Alert.alert('Erreur', 'Une erreur est survenue');

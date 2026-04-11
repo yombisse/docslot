@@ -1,40 +1,59 @@
 import axiosInstance from '../api/axiosIstance';
-
-export const loginUser = (email, password) => {
-  return axiosInstance.post('/auth/login', { email, password });
-};
-
-export const registerUser = (userData) => {
-  return axiosInstance.post('/auth/register', userData);
-};
-
-
-export const forgotPassword = (email) => {
-  return axiosInstance.post('/auth/forgot-password', { email });
-};
-
-
-export const checkEmailExists = (email) => {
-  return axiosInstance.post('/auth/check-email', { email });
-};
-
-
-export const changePassword = (passwords) => {
-  return axiosInstance.post('/auth/change-password', passwords);
-};
-
-
-
+import { handleError } from '../utils/errorHandler';
 import { deleteToken } from '../store/tokenservice';
+
+export const loginUser = async (email, password) => {
+  try {
+    const response = await axiosInstance.post('/auth/login', { email, password });
+    return { success: true, data: response.data };
+  } catch (error) {
+    return handleError(error, { service: 'authService', method: 'loginUser', params: { email } });
+  }
+};
+
+export const registerUser = async (userData) => {
+  try {
+    const response = await axiosInstance.post('/auth/register', userData);
+    return { success: true, data: response.data };
+  } catch (error) {
+    return handleError(error, { service: 'authService', method: 'registerUser' });
+  }
+};
+
+export const forgotPassword = async (email) => {
+  try {
+    const response = await axiosInstance.post('/auth/forgot-password', { email });
+    return { success: true, data: response.data };
+  } catch (error) {
+    return handleError(error, { service: 'authService', method: 'forgotPassword', params: { email } });
+  }
+};
+
+export const checkEmailExists = async (email) => {
+  try {
+    const response = await axiosInstance.post('/auth/check-email', { email });
+    return { success: true, data: response.data };
+  } catch (error) {
+    return handleError(error, { service: 'authService', method: 'checkEmailExists', params: { email } });
+  }
+};
+
+export const changePassword = async (passwords) => {
+  try {
+    const response = await axiosInstance.post('/auth/change-password', passwords);
+    return { success: true, data: response.data };
+  } catch (error) {
+    return handleError(error, { service: 'authService', method: 'changePassword' });
+  }
+};
 
 export const logout = async () => {
   try {
-    // 1. Supprimer le token du Keychain
     await deleteToken();
-
-    return true;
+    logError({ type: 'LOGOUT_SUCCESS', message: 'User logged out' });
+    return { success: true };
   } catch (error) {
-    console.log('Erreur logout:', error);
-    return false;
+    return handleError(error, { service: 'authService', method: 'logout' });
   }
 };
+

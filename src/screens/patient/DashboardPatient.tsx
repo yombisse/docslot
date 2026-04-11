@@ -14,6 +14,8 @@ import C_text from '../../componnents/C_text';
 import C_button from '../../componnents/C_button';
 import CustomFlatList from '../../componnents/C_Flatlist';
 
+import ProfileMenu from '../../screens/auth/ProfileMenu';
+
 import { getProfile } from '../../services/userService';
 import { getMyRendezvous } from '../../services/rdvService';
 import { getUnreadCount } from '../../services/notificationsService';
@@ -59,35 +61,25 @@ const DashboardPatient = ({ navigation }) => {
   };
 
   const loadUnread = async () => {
-      try {
-        const res = await getUnreadCount();
-        console.log("UNREAD RESPONSE =>", res.data.total);
-        setUnread(res.data.total);
-        console.log("UNREAD RESPONSE =>", unread);
-      } catch (e) {
-        console.log('Erreur notif badge', e);
-      }
-    };
-      const handleLogout = async () => {
-        const result = await logout();
-        if (result) {
-          navigation.replace('Login'); // ou AuthScreen
-        }
-      };
-  
-    // ===================== INIT =====================
-    useEffect(() => {
+    try {
+      const res = await getUnreadCount();
+      setUnread(res.data.total);
+    } catch (e) {
+      console.log('Erreur notif badge', e);
+    }
+  };
+
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      loadUnread();
       fetchData();
-    }, []);
-  
-    // ===================== REFRESH À CHAQUE NAVIGATION =====================
-    useFocusEffect(
-      useCallback(() => {
-        loadUnread();
-        fetchData();
-      }, [])
-    );
-  
+    }, [])
+  );
+
   // ================= RDV CARD =================
   const renderRdvItem = ({ item }) => (
     <View style={styles.card}>
@@ -133,7 +125,7 @@ const DashboardPatient = ({ navigation }) => {
 
         <View style={styles.icons}>
 
-          {/* NOTIFICATION ICON + BADGE */}
+          {/* NOTIFICATION */}
           <TouchableOpacity
             onPress={() => navigation.navigate('Notification')}
             style={{ position: 'relative' }}
@@ -149,9 +141,35 @@ const DashboardPatient = ({ navigation }) => {
             )}
           </TouchableOpacity>
 
-          <TouchableOpacity>
-            <Ionicons name="person-circle-outline" size={32} color="#fff" />
-          </TouchableOpacity>
+          {/* PROFILE MENU DROPDOWN */}
+          <ProfileMenu
+            navigation={navigation}
+            icon="person-circle-outline"
+            items={[
+              {
+                icon: "calendar-outline",
+                label: "Mes rendez-vous",
+                onPress: () =>
+                  navigation.navigate('Rendezvous', {
+                    screen: 'ListRendezvous',
+                  }),
+              },
+              {
+                icon: "add-circle-outline",
+                label: "Prendre RDV",
+                onPress: () =>
+                  navigation.navigate('Rendezvous', {
+                    screen: 'AddRendezvous',
+                  }),
+              },
+              {
+                icon: "log-out-outline",
+                label: "Déconnexion",
+                color: "red",
+                onPress: async () => await logout(),
+              },
+            ]}
+          />
 
         </View>
       </View>

@@ -58,23 +58,23 @@ const fetchCreneaux = async () => {
   };
 
   const confirmRdv = async (motif) => {
-    try {
-      await createRendezvous({
-        id_creneau: selectedCreneau.id_creneau,
-        motif,
-      });
+  try {
+    console.log("MOTIF REÇU =", motif);
 
-      setModalVisible(false);
-      Alert.alert('Succès', 'Rendez-vous pris avec succès');
+    await createRendezvous({
+      id_creneau: selectedCreneau.id_creneau,
+      motif: motif,
+    });
 
-      // 🔥 refresh immédiat après réservation
-      fetchCreneaux();
+    setModalVisible(false);
+    Alert.alert('Succès', 'Rendez-vous pris avec succès');
+    fetchCreneaux();
 
-    } catch (error) {
-      console.error("Erreur RDV:", error.message);
-      Alert.alert('Erreur', 'Créneau déjà réservé ou erreur serveur');
-    }
-  };
+  } catch (error) {
+    console.log("FULL ERROR:", error.response?.data || error.message);
+    Alert.alert('Erreur', 'Créneau déjà réservé ou erreur serveur');
+  }
+};
 
   const renderItem = ({ item }) => (
     <Card style={styles.cardContainer} elevation={2}>

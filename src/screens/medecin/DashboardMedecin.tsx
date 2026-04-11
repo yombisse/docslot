@@ -30,17 +30,18 @@ export default function DashboardMedecin({ navigation }) {
       setLoading(true);
 
       const profile = await getProfile();
+      console.log("Profile",profile)
       setUser(profile.data.data);
 
-      const rdvRes = await getMyRendezvous('agenda');
+      // const rdvRes = await getMyRendezvous();
 
-      const today = new Date().toISOString().split('T')[0];
+      // const today = new Date().toISOString().split('T')[0];
 
-      const todayRdv = rdvRes.data.data.filter(
-        (r) => r.date_rdv?.startsWith(today)
-      );
+      // const todayRdv = rdvRes.data.data.filter(
+      //   (r) => r.date_rdv?.startsWith(today)
+      // );
 
-      setRdvs(todayRdv);
+      // setRdvs(todayRdv);
 
     } catch (e) {
       console.log('Erreur dashboard médecin', e);

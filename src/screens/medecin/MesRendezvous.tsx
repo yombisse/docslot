@@ -24,7 +24,10 @@ const MesRendezVous = ({ navigation }) => {
 
         // 1️⃣ Récupérer le profil utilisateur
         const resProfile = await getProfile();
-        if (!resProfile.data.success) throw new Error("Impossible de récupérer le profil");
+        console.log("GetProfile",resProfile)
+        if (!resProfile.data.success)
+          console.log("Message d erreur dans MesRendezvous",error.message)
+
         const profileData = resProfile.data.data;
         setUser(profileData);
 
