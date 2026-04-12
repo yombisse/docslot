@@ -185,13 +185,7 @@ const MesRendezVous = ({ navigation }) => {
 
   return (
     <View style={{ flex: 1 }}>
-      <C_header
-        text="Mes Rendez-vous"
-        icon="chevron-back"
-        size={30}
-        onclickIcon={() => navigation.goBack()}
-      />
-
+    
       {loading ? (
         <View style={styles.centerContainer}>
           <ActivityIndicator size="large" color="#2BB673" />
