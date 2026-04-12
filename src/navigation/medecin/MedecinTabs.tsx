@@ -6,6 +6,8 @@ import DashboardMedecin from "../../screens/medecin/DashboardMedecin";
 import DisponnibiliteStack from "./DisponnibiliteStack";
 import UpdateProfileScreen from "../../screens/patient/updateProfile";
 import RdvStack from "../patient/rdvStack";
+import MedecinNavigator from "./medecinNavigator";
+import Medecinstack from "./Medecinstack";
 
 
 const Tab = createBottomTabNavigator();
@@ -34,10 +36,9 @@ export default function MedecinTabs() {
         headerShown: false,
       })}
     >
-      <Tab.Screen name="Dashboard" component={DashboardMedecin} />
+      <Tab.Screen name="Dashboard" component={Medecinstack} />
       <Tab.Screen name="MesRendezvous" component={RdvStack} />
       <Tab.Screen name="Disponnibilite" component={DisponnibiliteStack} />
-      <Tab.Screen name="Profile" component={UpdateProfileScreen} />
     </Tab.Navigator>
   );
 }

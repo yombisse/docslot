@@ -1,8 +1,7 @@
-// src/screens/GenericDetailsScreen.tsx
 import React from 'react';
 import { View, Text, StyleSheet, ScrollView } from 'react-native';
 import C_header from '../../../componnents/C_header';
-import { Card } from 'react-native-paper';
+import { Card, Divider } from 'react-native-paper';
 
 const DetailsScreen = ({ route, navigation }) => {
   const { data, type } = route.params;
@@ -11,32 +10,40 @@ const DetailsScreen = ({ route, navigation }) => {
     if (!value) return null;
 
     return (
-      <View style={styles.row}>
-        <Text style={styles.label}>{label} :</Text>
-        <Text style={styles.value}>{value}</Text>
-      </View>
+      <>
+        <View style={styles.row}>
+          <Text style={styles.label}>{label}</Text>
+          <Text style={styles.value}>{value}</Text>
+        </View>
+        <Divider style={styles.divider} />
+      </>
     );
   };
 
   return (
-    <View style={{ flex: 1 }}>
+    <View style={{ flex: 1, backgroundColor: '#f5f6fa' }}>
       <C_header
         icon="chevron-back"
-        size={30}
+        size={26}
         onclickIcon={() => navigation.goBack()}
-        text="Détails"
+        text="Détails du profil"
       />
 
       <ScrollView contentContainerStyle={styles.container}>
-        <Card style={styles.card}>
+        <Card style={styles.card} elevation={3}>
           <Card.Content>
 
-            {/* HEADER */}
-            <Text style={styles.title}>
-              {data.nom} {data.prenom}
-            </Text>
+            {/* HEADER IDENTITÉ */}
+            <View style={styles.headerBox}>
+              <Text style={styles.title}>
+                {data.nom} {data.prenom}
+              </Text>
+              <Text style={styles.subtitle}>{type.toUpperCase()}</Text>
+            </View>
 
-            {/* COMMON FIELDS */}
+            <Divider style={styles.sectionDivider} />
+
+            {/* INFOS COMMUNES */}
             {renderField('Email', data.email)}
             {renderField('Téléphone', data.telephone)}
             {renderField('Rôle', data.role)}
@@ -53,7 +60,10 @@ const DetailsScreen = ({ route, navigation }) => {
             {type === 'medecin' && (
               <>
                 {renderField('Spécialité', data.specialite)}
-                {renderField('Durée créneau', data.duree_creneau + ' min')}
+                {renderField(
+                  'Durée créneau',
+                  data.duree_creneau + ' min'
+                )}
               </>
             )}
 
@@ -63,7 +73,6 @@ const DetailsScreen = ({ route, navigation }) => {
                 {renderField('Statut', data.status)}
               </>
             )}
-
           </Card.Content>
         </Card>
       </ScrollView>
@@ -75,30 +84,45 @@ export default DetailsScreen;
 
 const styles = StyleSheet.create({
   container: {
-    padding: 15,
+    padding: 16,
   },
   card: {
-    borderRadius: 10,
-    padding: 10,
+    borderRadius: 14,
+    paddingVertical: 10,
+    backgroundColor: '#ffffff',
+  },
+  headerBox: {
+    alignItems: 'center',
+    marginBottom: 10,
   },
   title: {
     fontSize: 22,
-    fontWeight: 'bold',
-    marginBottom: 15,
-    textAlign: 'center',
+    fontWeight: '700',
+    color: '#2BB673',
+  },
+  subtitle: {
+    marginTop: 4,
+    fontSize: 13,
+    color: '#888',
+    letterSpacing: 1,
+  },
+  sectionDivider: {
+    marginVertical: 12,
   },
   row: {
-    flexDirection: 'row',
-    marginBottom: 10,
-    flexWrap: 'wrap',
+    paddingVertical: 8,
   },
   label: {
-    fontWeight: '600',
-    width: 120,
-    color: '#333',
+    fontSize: 13,
+    color: '#888',
+    marginBottom: 2,
   },
   value: {
-    flex: 1,
-    color: '#555',
+    fontSize: 16,
+    color: '#333',
+    fontWeight: '500',
+  },
+  divider: {
+    marginVertical: 6,
   },
 });

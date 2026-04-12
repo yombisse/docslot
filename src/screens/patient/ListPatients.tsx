@@ -30,24 +30,6 @@ const ListPatientScreen = ({ navigation, route }) => {
     fetchPatients();
   }, []);
 
-  const handleDelete = (id_patient: number) => {
-    Alert.alert(
-      'Confirmer',
-      'Voulez-vous vraiment supprimer ce patient ?',
-      [
-        { text: 'Annuler', style: 'cancel' },
-        {
-          text: 'Supprimer',
-          style: 'destructive',
-          onPress: () => {
-            deletePatient(id_patient);
-            console.log('Supprimer patient', id_patient);
-            setPatients(patients.filter(p => p.id_patient !== id_patient));
-          },
-        },
-      ]
-    );
-  };
 
   const renderItem = ({ item }: any) => (
     <Card style={styles.cardContainer} elevation={2}>
@@ -75,25 +57,7 @@ const ListPatientScreen = ({ navigation, route }) => {
                 })
               }
             />
-            <C_button
-              icon="pencil-outline"
-              size={24}
-              color="#fff"
-              onPress={() =>
-                navigation.navigate('AddPatient', {
-                  patientId: item.id_patient,
-                  patientData: item,
-                })
-              }
-              style={[styles.actionButton, { backgroundColor: '#4e9bde' }]}
-            />
-            <C_button
-              icon="trash-outline"
-              size={24}
-              color="#fff"
-              onPress={() => handleDelete(item.id_patient)}
-              style={[styles.actionButton, { backgroundColor: '#f44336' }]}
-            />
+            
           </View>
         </View>
       </Card.Content>
@@ -104,7 +68,7 @@ const ListPatientScreen = ({ navigation, route }) => {
   return (
     <View style={{ flex: 1 }}>
       <C_header
-        title="Liste des Patients"
+        text="Liste des Patients"
         icon="chevron-back"
         size={30}
         onclickIcon={() => navigation.goBack()}
@@ -122,13 +86,7 @@ const ListPatientScreen = ({ navigation, route }) => {
           title="Liste des Patients"
         />
       )}
-      
-      <C_button
-        title="+"
-        onPress={() => navigation.navigate("AddPatient")}
-        style={styles.addButtonFloating}
-        textstyle={{ fontSize: 30, color: '#fff', fontWeight: 'bold' }}
-      />
+
     </View>
   );
 };
@@ -181,22 +139,6 @@ const styles = StyleSheet.create({
   icon: {
     marginRight: 0,
     alignSelf: 'center',
-  },
-  addButtonFloating: {
-    position: 'absolute',
-    bottom: 30,
-    right: 20,
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    backgroundColor: '#2BB673',
-    justifyContent: 'center',
-    alignItems: 'center',
-    elevation: 5,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.3,
-    shadowRadius: 3,
   },
   emptyContainer: {
     flex: 1,

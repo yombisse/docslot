@@ -59,7 +59,6 @@ export default function PatientTabs() {
     >
       <Tab.Screen name="Dashboard" component={PatientNavigator} />
       <Tab.Screen name="Rendezvous" component={RdvStack} />
-      <Tab.Screen name="Profile" component={UpdateProfileScreen} />
     </Tab.Navigator>
   );
 }

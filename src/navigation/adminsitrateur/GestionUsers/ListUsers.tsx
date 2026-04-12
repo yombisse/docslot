@@ -1,4 +1,3 @@
-// src/screens/ListUserScreen.tsx
 import React, { useState, useCallback } from 'react';
 import { View, Text, StyleSheet, Alert, ActivityIndicator } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
@@ -29,21 +28,21 @@ const ListUserScreen = ({ navigation }) => {
     }
   };
 
-  // refresh à chaque retour écran
   useFocusEffect(
     useCallback(() => {
       fetchUsers();
     }, [])
   );
 
-  const handleDelete = (id_user: number) => {
+  // 🔥 LOGIQUE INCHANGÉE (soft delete côté backend)
+  const handleBlock = (id_user: number) => {
     Alert.alert(
-      'Confirmer',
-      'Voulez-vous vraiment supprimer cet utilisateur ?',
+      'Confirmer le blocage',
+      'Voulez-vous vraiment bloquer cet utilisateur ?',
       [
         { text: 'Annuler', style: 'cancel' },
         {
-          text: 'Supprimer',
+          text: 'Bloquer',
           style: 'destructive',
           onPress: async () => {
             await deleteUser(id_user);
@@ -68,6 +67,7 @@ const ListUserScreen = ({ navigation }) => {
           </View>
 
           <View style={styles.buttonsRow}>
+            {/* Voir */}
             <C_button
               icon="eye-outline"
               size={24}
@@ -75,12 +75,13 @@ const ListUserScreen = ({ navigation }) => {
               style={styles.actionButton}
               onPress={() =>
                 navigation.navigate('Detail', {
-                data: item,
-                type: 'user'
+                  data: item,
+                  type: 'user',
                 })
               }
             />
 
+            {/* Modifier */}
             <C_button
               icon="pencil-outline"
               size={24}
@@ -92,11 +93,11 @@ const ListUserScreen = ({ navigation }) => {
             />
 
             <C_button
-              icon="trash-outline"
+              icon="ban-outline"
               size={24}
               color="#fff"
               style={[styles.actionButton, { backgroundColor: '#f44336' }]}
-              onPress={() => handleDelete(item.id_user)}
+              onPress={() => handleBlock(item.id_user)}
             />
           </View>
         </View>
@@ -182,7 +183,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     paddingVertical: 8,
     borderRadius: 5,
-    backgroundColor: '#2BB673',
     justifyContent: 'center',
     alignItems: 'center',
     minWidth: 40,

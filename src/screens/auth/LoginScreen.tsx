@@ -14,36 +14,33 @@ export default function LoginScreen({ navigation }) {
   const [password, setPassword] = React.useState('');
 
   const handleLogin = async () => {
-    try {
-      console.log('Tentative login avec:', email, password);
-      const response = await loginUser(email, password);
-      const { token, user } = response.data;
+    const result = await loginUser(email, password);
+    if (!result.success) {
+      return; // Handled by service
+    }
 
-      // Sauvegarde le token
+    const { token, user } = result.data;
+
+    try {
       await saveToken(token);
 
       Alert.alert('Succès', 'Connexion réussie');
 
       // Redirection selon le rôle
       if (user.role === 'administrateur') {
-        navigation.navigate('Admin', {
-          screen: 'DashboardAdmin',
-        });
+        navigation.navigate('Admin', { screen: 'DashboardAdmin' });
       } else if (user.role === 'patient') {
         navigation.navigate('Patient', {
           screen: 'DashboardPatient',
           params: { userId: user.id },
         });
       } else if (user.role === 'medecin') {
-        navigation.navigate('Medecin', {
-          screen: 'DashboardMedecin',
-        });
+        navigation.navigate('Medecin', { screen: 'DashboardMedecin' });
       } else {
         Alert.alert('Erreur', 'Rôle inconnu');
       }
-    } catch (error) {
-      console.log(error.response?.data);
-      Alert.alert('Erreur', 'Email ou mot de passe incorrect');
+    } catch (saveErr) {
+      console.error('Token save error:', saveErr);
     }
   };
 

@@ -1,7 +1,7 @@
 export const roles = [
   { label: 'Administrateur', value: 'administrateur' },
   { label: 'Médecin', value: 'medecin' },
-  { label: 'Patient', value: 'pateint' },
+  { label: 'Patient', value: 'patient' },
 ];
 
 export const statutRdv = [

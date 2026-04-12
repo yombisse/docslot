@@ -12,7 +12,6 @@ const Patientstack = () => {
       initialRouteName='ListPatients'
     >
       <Stack.Screen name="ListPatients" component={ListPatientScreen} />
-      <Stack.Screen name="AddPatient" component={AddPatient} />
       <Stack.Screen name="Detail" component={DetailsScreen} />
     </Stack.Navigator>
   )

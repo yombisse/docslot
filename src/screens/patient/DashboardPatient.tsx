@@ -68,7 +68,7 @@ const DashboardPatient = ({ navigation }) => {
       console.log('Erreur notif badge', e);
     }
   };
-
+  
   useEffect(() => {
     fetchData();
   }, []);
@@ -141,32 +141,20 @@ const DashboardPatient = ({ navigation }) => {
             )}
           </TouchableOpacity>
 
-          {/* PROFILE MENU DROPDOWN */}
           <ProfileMenu
             navigation={navigation}
             icon="person-circle-outline"
             items={[
               {
-                icon: "calendar-outline",
-                label: "Mes rendez-vous",
-                onPress: () =>
-                  navigation.navigate('Rendezvous', {
-                    screen: 'ListRendezvous',
-                  }),
+                icon: "person-outline",
+                label: "Mon profil",
+                onPress: () => navigation.navigate('ProfilPatient'),
               },
               {
-                icon: "add-circle-outline",
-                label: "Prendre RDV",
+                icon: "log-out",
+                label: "Deconnexion",
                 onPress: () =>
-                  navigation.navigate('Rendezvous', {
-                    screen: 'AddRendezvous',
-                  }),
-              },
-              {
-                icon: "log-out-outline",
-                label: "Déconnexion",
-                color: "red",
-                onPress: async () => await logout(),
+                  navigation.navigate('Auth', { screen: 'Login' }),
               },
             ]}
           />

@@ -1,5 +1,5 @@
-// services/countryService.js
 import axios from 'axios';
+import { handleError } from '../utils/errorHandler';
 
 const COUNTRY_API = 'https://restcountries.com/v3.1/all?fields=name,idd';
 
@@ -16,9 +16,9 @@ export const fetchCountries = async () => {
       };
     }).sort((a, b) => a.label.localeCompare(b.label));
 
-    return list;
+    return { success: true, data: list };
   } catch (err) {
-    console.error('Erreur récupération pays :', err.message);
-    return [];
+    return handleError(err, { service: 'countryService', method: 'fetchCountries', externalApi: COUNTRY_API });
   }
 };
+

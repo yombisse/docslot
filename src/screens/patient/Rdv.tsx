@@ -8,20 +8,20 @@ import {
   TouchableOpacity,
 } from 'react-native';
 
-import { getMyRendezvous } from '../../services/rdvService';
 import { getProfile } from '../../services/userService';
 import C_button from '../../componnents/C_button';
-import ModalGeneric from '../../componnents/C_Modal';
 import C_RdvDetailsModal from '../../componnents/C_modalConfirm';
+import { getAllRendezvous, getMyRendezvous } from '../../services/rdvService';
+import C_header from '../../componnents/C_header';
+import { formateTime, formatTime } from '../../utils/formateDate';
 
-export default function PatientAgendaScreen() {
-
+export default function PatientAgendaScreen({navigation}) {
   const [sections, setSections] = useState([]);
-  const [user, setUser] = useState({});
+  const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [view, setView] = useState('agenda');
   const [modalVisible, setModalVisible] = useState(false);
-  const [selectedItem, setSelectedItem] = useState([]);
+  const [selectedItem, setSelectedItem] = useState(null);
 
   useEffect(() => {
     fetchData();
@@ -31,104 +31,112 @@ export default function PatientAgendaScreen() {
     try {
       setLoading(true);
 
-      const profileRes = await getProfile();
-      const profile = profileRes.data.data;
-      setUser(profile);
+      
+      const profileResult = await getProfile();
+      const profileData = profileResult?.data?.data;
 
-      const rdvRes = await getMyRendezvous(view);
-      const rdvs = rdvRes.data.data || [];
+      if (!profileResult?.data?.success || !profileData) {
+        setSections([]);
+        return;
+      }
 
-      const grouped = {};
+      setUser(profileData);
 
-      rdvs.forEach((rdv) => {
+  
+      let rdvResponse;
 
-        const date = new Date(rdv.date_rdv).toLocaleDateString(
-          'fr-FR',
-          { weekday: 'long', day: 'numeric', month: 'long' }
-        );
+      if (profileData.role === 'administrateur') {
+        rdvResponse = await getAllRendezvous();
+      } else {
+        
+        rdvResponse = await getMyRendezvous()
+      }
 
-        if (!grouped[date]) grouped[date] = [];
-        grouped[date].push(rdv);
-      });
+      const rdvs = rdvResponse?.data?.data;
 
-      const sectionsData = Object.keys(grouped)
-        .sort()
-        .map((date) => ({
-          title: date,
-          data: grouped[date],
-        }));
+      if (!Array.isArray(rdvs)) {
+        setSections([]);
+        return;
+      }
 
+   const grouped = {};
+
+  rdvs.forEach((rdv) => {
+    const rawDate = rdv.date_rdv; 
+
+    const dateKey = new Date(rawDate).toLocaleDateString('fr-FR', {
+      weekday: 'long',
+      day: 'numeric',
+      month: 'long',
+    });
+
+    if (!grouped[dateKey]) {
+      grouped[dateKey] = {
+        rawDate,
+        data: [],
+      };
+    }
+
+    grouped[dateKey].data.push(rdv);
+  });
+
+  const sectionsData = Object.entries(grouped)
+    .sort((a, b) => new Date(a[1].rawDate) - new Date(b[1].rawDate))
+    .map(([title, value]) => ({
+      title,
+      data: value.data,
+    }));
       setSections(sectionsData);
-
     } catch (err) {
-      console.error('Erreur agenda:', err);
+      console.error('fetch error:', err);
+      setSections([]);
     } finally {
       setLoading(false);
     }
   };
+
   
+  const renderItem = ({ item }) => {
+    const isAdmin = user?.role === 'administrateur';
+    const isMedecin = user?.role === 'medecin';
 
-  // ================= STATUS BADGE =================
-  const StatusBadge = ({ statut }) => {
-
-    const config = {
-      confirme: { bg: '#e8f5e9', color: '#2e7d32', text: 'CONFIRMÉ' },
-      en_attente: { bg: '#fff8e1', color: '#f9a825', text: 'EN ATTENTE' },
-      annule: { bg: '#ffebee', color: '#c62828', text: 'ANNULÉ' },
-    };
-
-    const current = config[statut] || config.en_attente;
+    const name =
+      isAdmin
+        ? `${item?.patient_nom ?? ''} ${item?.patient_prenom ?? ''} → ${item?.medecin_nom ?? ''} ${item?.medecin_prenom ?? ''}`.trim()
+        : isMedecin
+        ? `${item?.patient_nom ?? ''} ${item?.patient_prenom ?? ''}`.trim()
+        : `${item?.medecin_nom ?? ''} ${item?.medecin_prenom ?? ''}`.trim();
 
     return (
-      <View style={[styles.badge, { backgroundColor: current.bg }]}>
-        <Text style={[styles.badgeText, { color: current.color }]}>
-          {current.text}
-        </Text>
-      </View>
-    );
-  };
-
-  // ================= RENDER ITEM =================
-  const renderItem = ({ item }) => {
-
-  const isMedecin = user?.role === 'medecin';
-
-  const name = isMedecin
-    ? `${item.patient_nom || ''} ${item.patient_prenom || ''}`.trim()
-    : `${item.medecin_nom || ''} ${item.medecin_prenom || ''}`.trim();
-
-  return (
-    <TouchableOpacity
-        activeOpacity={0.8}
+      <TouchableOpacity
+        style={styles.card}
         onPress={() => {
           setSelectedItem(item);
           setModalVisible(true);
         }}
-        style={styles.card}
       >
-
-        {/* TIME BLOCK */}
+        {/* TIME */}
         <View style={styles.timeBox}>
           <Text style={styles.time}>
-            {item.heure_rdv?.slice(0, 5)}
+            {formateTime(item.heure_rdv)}
           </Text>
         </View>
 
         {/* CONTENT */}
         <View style={styles.content}>
-
           <Text style={styles.title}>
-            {item.motif} - {name}
+            {item?.motif ?? 'Sans motif'} - {name}
           </Text>
 
-          {/* BADGE */}
-          <StatusBadge statut={item.statut} />
-
+          <Text style={styles.status}>
+            {(item?.statut ?? 'en_attente').toUpperCase()}
+          </Text>
         </View>
-
       </TouchableOpacity>
     );
   };
+
+  
   if (loading) {
     return (
       <View style={styles.loader}>
@@ -137,46 +145,46 @@ export default function PatientAgendaScreen() {
     );
   }
 
+  
   return (
     <View style={styles.container}>
-
+      
       <SectionList
         sections={sections}
-        keyExtractor={(item) => item.id_rdv.toString()}
+        keyExtractor={(item) => item.id_rdv?.toString()}
         renderSectionHeader={({ section }) => (
-          <Text style={styles.dateTitle}>
-            {section.title}
-          </Text>
+          <Text style={styles.dateTitle}>{section.title}</Text>
         )}
         renderItem={renderItem}
-        contentContainerStyle={styles.list}
+        contentContainerStyle={{ paddingBottom: 120 }}
       />
 
-      <C_button
-        title={view === 'agenda' ? 'Voir Historique' : 'Voir Agenda'}
-        onPress={() =>
-          setView(view === 'agenda' ? 'historique' : 'agenda')
-        }
-        style={styles.historyBtn}
-        textstyle={styles.historyText}
-      />
-      
+      {/* SWITCH VIEW (sauf admin) */}
+      {user?.role !== 'administrateur' && (
+        <C_button
+          title={view === 'agenda' ? 'Voir Historique' : 'Voir Agenda'}
+          onPress={() =>
+            setView(view === 'agenda' ? 'historique' : 'agenda')
+          }
+          style={styles.btn}
+          textstyle={{ color: '#fff' }}
+        />
+      )}
+
+      {/* MODAL */}
       <C_RdvDetailsModal
         visible={modalVisible}
         rdv={selectedItem}
         role={user?.role}
         onClose={() => setModalVisible(false)}
       />
-
     </View>
   );
 }
 const styles = StyleSheet.create({
-
   container: {
     flex: 1,
     backgroundColor: '#f6f8fb',
-    padding: 15,
   },
 
   loader: {
@@ -185,44 +193,42 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
 
-  list: {
-    paddingBottom: 100,
-  },
-
   dateTitle: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: '#2c3e50',
+    fontSize: 15,
+    fontWeight: '800',
     marginVertical: 12,
+    marginHorizontal: 10,
+    color: '#2BB673',
     textTransform: 'capitalize',
+    letterSpacing: 0.3,
   },
 
   card: {
-  flexDirection: 'row',
-  backgroundColor: '#fff',
-  padding: 14,
-  borderRadius: 14,
-  marginBottom: 12,
+    flexDirection: 'row',
+    backgroundColor: '#ffffff',
+    paddingVertical: 14,
+    paddingHorizontal: 12,
+    borderRadius: 14,
+    marginBottom: 10,
+    elevation: 3,
+    shadowColor: '#000',
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 3 },
+  },
 
-  shadowColor: '#000',
-  shadowOpacity: 0.08,
-  shadowRadius: 10,
-  shadowOffset: { width: 0, height: 4 },
-  elevation: 3,
-},
-  // TIME BLOCK
   timeBox: {
-    width: 60,
+    width: 65,
     justifyContent: 'center',
     alignItems: 'center',
     borderRightWidth: 1,
     borderRightColor: '#eee',
-    marginRight: 10,
+    marginRight: 12,
   },
 
   time: {
-    fontSize: 14,
-    fontWeight: 'bold',
+    fontWeight: '800',
+    fontSize: 13,
     color: '#2BB673',
   },
 
@@ -232,45 +238,38 @@ const styles = StyleSheet.create({
   },
 
   title: {
-    fontSize: 15,
+    fontSize: 14,
     fontWeight: '600',
     color: '#2c3e50',
     marginBottom: 6,
+    lineHeight: 18,
   },
 
-  // ================= BADGE =================
-  badge: {
+  status: {
     alignSelf: 'flex-start',
-    paddingVertical: 4,
+    fontSize: 11,
+    fontWeight: '800',
+    color: '#fff',
+    backgroundColor: '#2BB673',
     paddingHorizontal: 10,
+    paddingVertical: 3,
     borderRadius: 20,
+    overflow: 'hidden',
   },
 
-  badgeText: {
-    fontSize: 12,
-    fontWeight: '700',
-  },
-
-  // ================= BUTTON =================
-  historyBtn: {
+  btn: {
     position: 'absolute',
-    bottom: 15,
+    bottom: 20,
     left: 15,
     right: 15,
     backgroundColor: '#2BB673',
-    padding: 15,
+    padding: 14,
     borderRadius: 12,
     alignItems: 'center',
-
+    elevation: 5,
     shadowColor: '#000',
-    shadowOpacity: 0.15,
+    shadowOpacity: 0.12,
     shadowRadius: 8,
     shadowOffset: { width: 0, height: 3 },
-    elevation: 5,
-  },
-
-  historyText: {
-    color: '#fff',
-    fontWeight: '700',
   },
 });

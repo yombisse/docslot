@@ -24,24 +24,24 @@ export default function DashboardMedecin({ navigation }) {
   const [loading, setLoading] = useState(true);
   const [unread, setUnread] = useState(0);
 
-  // ===================== DATA =====================
   const fetchData = async () => {
     try {
       setLoading(true);
 
       const profile = await getProfile();
-      console.log("Profile",profile)
-      setUser(profile.data.data);
+      const userData = profile?.data?.data;
+      setUser(userData);
 
-      // const rdvRes = await getMyRendezvous();
+      const rdvRes = await getMyRendezvous();
 
-      // const today = new Date().toISOString().split('T')[0];
+      const today = new Date().toISOString().split('T')[0];
 
-      // const todayRdv = rdvRes.data.data.filter(
-      //   (r) => r.date_rdv?.startsWith(today)
-      // );
+      const todayRdv = (rdvRes?.data?.data || []).filter((r) => {
+        const rdvDate = r.date_rdv?.toString().split('T')[0];
+        return rdvDate === today;
+      });
 
-      // setRdvs(todayRdv);
+      setRdvs(todayRdv);
 
     } catch (e) {
       console.log('Erreur dashboard médecin', e);
@@ -50,7 +50,6 @@ export default function DashboardMedecin({ navigation }) {
     }
   };
 
-  // ===================== NOTIFS =====================
   const loadUnread = async () => {
     try {
       const res = await getUnreadCount();
@@ -71,15 +70,13 @@ export default function DashboardMedecin({ navigation }) {
     }, [])
   );
 
-
   const handleLogout = async () => {
     const result = await logout();
-
     if (result) {
-      navigation.replace('Login'); // ou AuthScreen
+      navigation.replace('Login');
     }
   };
-  // ===================== RDV ITEM =====================
+
   const renderItem = ({ item }) => (
     <View style={styles.card}>
       <Text style={styles.time}>
@@ -95,7 +92,6 @@ export default function DashboardMedecin({ navigation }) {
     </View>
   );
 
-  // ===================== LOADING =====================
   if (loading) {
     return (
       <View style={styles.loader}>
@@ -104,22 +100,18 @@ export default function DashboardMedecin({ navigation }) {
     );
   }
 
-  // ===================== UI =====================
   return (
     <View style={styles.container}>
 
-      {/* HEADER */}
       <View style={styles.header}>
-
-        <Text style={styles.headerTitle}>
-          Docslot
-        </Text>
+        <Text style={styles.headerTitle}>Docslot</Text>
 
         <View style={styles.headerIcons}>
 
-          {/* NOTIFICATIONS */}
           <TouchableOpacity
-            onPress={() => navigation.navigate('Notification')}
+            onPress={() => {
+                navigation.navigate('Notification');
+              }}
             style={{ position: 'relative' }}
           >
             <Ionicons name="notifications-outline" size={26} color="#fff" />
@@ -133,27 +125,26 @@ export default function DashboardMedecin({ navigation }) {
             )}
           </TouchableOpacity>
 
-          {/* PROFILE DROPDOWN */}
           <ProfileMenu
             navigation={navigation}
             icon="person-circle-outline"
             items={[
               {
+                icon: "person-outline",
+                label: "Mon profil",
+                onPress: () => navigation.navigate('ProfileMedecin'),
+              },
+              {
                 icon: "log-out",
                 label: "Deconnexion",
                 onPress: () =>
-                  navigation.navigate('Auth', {
-                    screen: 'Login',
-                  }),
+                  navigation.navigate('Auth', { screen: 'Login' }),
               },
-
             ]}
           />
-
         </View>
       </View>
 
-      {/* BODY */}
       <View style={styles.bodycontainer}>
 
         <Text style={styles.welcome}>

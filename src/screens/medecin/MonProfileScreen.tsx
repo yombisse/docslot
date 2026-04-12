@@ -1,36 +1,33 @@
 import React, { useEffect, useState } from 'react';
-import {
-  View,
-  StyleSheet,
-  ActivityIndicator,
-  Alert,
-  ScrollView,
-} from 'react-native';
+import { View, StyleSheet, ScrollView, Alert, ActivityIndicator } from 'react-native';
 
 import C_header from '../../componnents/C_header';
 import C_button from '../../componnents/C_button';
 import C_text from '../../componnents/C_text';
 
-
 import { getProfile, updateUser } from '../../services/userService';
-import { formatDate } from '../../utils/formateDate';
 import C_inputfields from '../../componnents/C_inputfields';
 
-export default function ProfilePatient({ navigation }) {
+export default function ProfileMedecin({ navigation }) {
 
   const [loading, setLoading] = useState(true);
 
+  // USER
   const [id_user, setIdUser] = useState(null);
   const [nom, setNom] = useState('');
   const [prenom, setPrenom] = useState('');
   const [email, setEmail] = useState('');
   const [telephone, setTelephone] = useState('');
   const [password, setPassword] = useState('');
-  const [adresse, setAdresse] = useState('');
-  const [sexe, setSexe] = useState('');
-  const [dateNaissance, setDateNaissance] = useState('');
+
+  // MEDICAL INFO
+  const [specialite, setSpecialite] = useState('');
+  const [dureeCreneau, setDureeCreneau] = useState('');
+
+  // READ ONLY
   const [role, setRole] = useState('');
 
+  // ================= LOAD =================
   const loadProfile = async () => {
     try {
       setLoading(true);
@@ -43,9 +40,8 @@ export default function ProfilePatient({ navigation }) {
       setPrenom(data.prenom || '');
       setEmail(data.email || '');
       setTelephone(data.telephone || '');
-      setAdresse(data.adresse || '');
-      setSexe(data.sexe || '');
-      setDateNaissance(data.date_naissance || '');
+      setSpecialite(data.specialite || '');
+      setDureeCreneau(String(data.duree_creneau || '30'));
       setRole(data.role || '');
 
     } catch (e) {
@@ -60,6 +56,7 @@ export default function ProfilePatient({ navigation }) {
     loadProfile();
   }, []);
 
+  // ================= UPDATE =================
   const handleUpdate = async () => {
     try {
 
@@ -69,10 +66,11 @@ export default function ProfilePatient({ navigation }) {
         prenom,
         email,
         telephone,
-        adresse,
-        sexe,
-        date_naissance: dateNaissance,
         role,
+
+        specialite,
+        duree_creneau: parseInt(dureeCreneau || 30),
+
         ...(password.trim() !== '' && { password }),
       };
 
@@ -83,10 +81,11 @@ export default function ProfilePatient({ navigation }) {
 
     } catch (e) {
       console.log(e);
-      Alert.alert('Erreur', 'Mise à jour impossible');
+      Alert.alert('Erreur', 'Mise à jour échouée');
     }
   };
 
+  // ================= LOADING =================
   if (loading) {
     return (
       <View style={styles.center}>
@@ -99,38 +98,33 @@ export default function ProfilePatient({ navigation }) {
     <View style={styles.container}>
 
       <C_header
-        text="Mon profil"
         icon="chevron-back"
+        text="Mon profil médecin"
         onclickIcon={() => navigation.goBack()}
       />
 
       <ScrollView>
-        <View style={styles.formulaire}>
+        <View style={styles.form}>
 
           <C_text text="Informations personnelles" textstyle={styles.title} />
 
-          <C_inputfields placeholder="Nom" value={nom} onChangeText={setNom} containerstyle={styles.form}/>
-          <C_inputfields placeholder="Prénom" value={prenom} onChangeText={setPrenom} containerstyle={styles.form}/>
-          <C_inputfields placeholder="Email" value={email} onChangeText={setEmail} containerstyle={styles.form}/>
-          <C_inputfields placeholder="Téléphone" value={telephone} onChangeText={setTelephone} containerstyle={styles.form}/>
-          <C_inputfields placeholder="Adresse" value={adresse} onChangeText={setAdresse} containerstyle={styles.form} />
-          <C_inputfields placeholder="Sexe" value={sexe} onChangeText={setSexe} containerstyle={styles.form} />
+          <C_inputfields placeholder="Nom" value={nom} onChangeText={setNom} />
+          <C_inputfields placeholder="Prénom" value={prenom} onChangeText={setPrenom} />
+          <C_inputfields placeholder="Email" value={email} onChangeText={setEmail} />
+          <C_inputfields placeholder="Téléphone" value={telephone} onChangeText={setTelephone} />
 
-          <C_inputfields
-            placeholder="Date de naissance (YYYY-MM-DD)"
-            value={formatDate(dateNaissance)}
-            onChangeText={setDateNaissance}
-            containerstyle={styles.form}
-          />
+          <C_text text="Informations médicales" textstyle={styles.subtitle} />
 
-          <C_text text={`Rôle : ${role}`} textstyle={{ marginTop: 10, fontWeight: 'bold' }} />
+          <C_inputfields placeholder="Spécialité" value={specialite} onChangeText={setSpecialite} />
+          <C_inputfields placeholder="Durée créneau (minutes)" value={dureeCreneau} onChangeText={setDureeCreneau} />
+
+          <C_text text={`Rôle : ${role}`} textstyle={styles.role} />
 
           <C_inputfields
             placeholder="Nouveau mot de passe"
             value={password}
             onChangeText={setPassword}
             secureTextEntry
-            containerstyle={styles.form}
           />
 
           <C_button
@@ -147,29 +141,41 @@ export default function ProfilePatient({ navigation }) {
 }
 
 const styles = StyleSheet.create({
+
   container: {
     flex: 1,
     backgroundColor: '#f6f8fb',
   },
+
   center: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
   },
+
   form: {
-    height:50,
-    borderRadius:5,
-    marginVertical:10
+    padding: 20,
   },
-  formulaire:{
-      justifyContent:'center',
-      padding:10
-  },
+
   title: {
     fontSize: 18,
     fontWeight: 'bold',
     marginBottom: 15,
   },
+
+  subtitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    marginTop: 20,
+    marginBottom: 10,
+    color: '#2BB673',
+  },
+
+  role: {
+    marginTop: 10,
+    fontWeight: 'bold',
+  },
+
   button: {
     marginTop: 25,
     height: 50,

@@ -34,7 +34,7 @@ export const getProfile = async () => {
 // Créer un nouvel utilisateur
 export const createUser = async (userData) => {
   try {
-    const response = await axiosInstance.post('/users', userData);
+    const response = await axiosInstance.post('/users/create', userData);
     return { success: true, data: response.data };
   } catch (error) {
     return handleError(error, { service: 'userService', method: 'createUser', params: userData });

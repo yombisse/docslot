@@ -1,36 +1,73 @@
 import axiosInstance from '../api/axiosIstance';
+import { handleError } from '../utils/errorHandler';
 
-// 🔎 Tous les médecins
-export const getAllMedecins = () => {
-  return axiosInstance.get('/medecins');
+// Tous les médecins
+export const getAllMedecins = async () => {
+  try {
+    const response = await axiosInstance.get('/medecins');
+    return { success: true, data: response.data };
+  } catch (error) {
+    return handleError(error, { service: 'medecinService', method: 'getAllMedecins' });
+  }
 };
 
 // Médecins disponibles
-export const getAllMedecinsDisponibles = () => {
-  return axiosInstance.get('/medecins/available');
+export const getAllMedecinsDisponibles = async () => {
+  try {
+    const response = await axiosInstance.get('/medecins/available');
+    return { success: true, data: response.data };
+  } catch (error) {
+    return handleError(error, { service: 'medecinService', method: 'getAllMedecinsDisponibles' });
+  }
 };
 
-// Détails d’un médecin
-export const getMedecinById = (id) => {
-  return axiosInstance.get(`/medecins/${id}`);
+// Détails d'un médecin
+export const getMedecinById = async (id) => {
+  try {
+    const response = await axiosInstance.get(`/medecins/${id}`);
+    return { success: true, data: response.data };
+  } catch (error) {
+    return handleError(error, { service: 'medecinService', method: 'getMedecinById', params: { id } });
+  }
 };
 
-// créneaux disponibles d’un médecin
-export const getCreneauxByMedecin = (id_medecin) => {
-  return axiosInstance.get(`/medecins/${id_medecin}/slots`);
+// Créneaux disponibles d'un médecin
+export const getCreneauxByMedecin = async (id_medecin) => {
+  try {
+    const response = await axiosInstance.get(`/medecins/${id_medecin}/slots`);
+    return { success: true, data: response.data };
+  } catch (error) {
+    return handleError(error, { service: 'medecinService', method: 'getCreneauxByMedecin', params: { id_medecin } });
+  }
 };
 
-// ➕ Créer un médecin
-export const createMedecin = (medecinData) => {
-  return axiosInstance.post('/medecins', medecinData);
+// Créer un médecin
+export const createMedecin = async (medecinData) => {
+  try {
+    const response = await axiosInstance.post('/medecins', medecinData);
+    return { success: true, data: response.data };
+  } catch (error) {
+    return handleError(error, { service: 'medecinService', method: 'createMedecin', params: medecinData });
+  }
 };
 
 // Mettre à jour un médecin
-export const updateMedecin = (id, medecinData) => {
-  return axiosInstance.put(`/medecins/${id}`, medecinData);
+export const updateMedecin = async (id, medecinData) => {
+  try {
+    const response = await axiosInstance.put(`/medecins/${id}`, medecinData);
+    return { success: true, data: response.data };
+  } catch (error) {
+    return handleError(error, { service: 'medecinService', method: 'updateMedecin', params: { id, ...medecinData } });
+  }
 };
 
-//Supprimer un médecin
-export const deleteMedecin = (id) => {
-  return axiosInstance.delete(`/medecins/${id}`);
+// Supprimer un médecin
+export const deleteMedecin = async (id) => {
+  try {
+    const response = await axiosInstance.delete(`/medecins/${id}`);
+    return { success: true, data: response.data };
+  } catch (error) {
+    return handleError(error, { service: 'medecinService', method: 'deleteMedecin', params: { id } });
+  }
 };
+

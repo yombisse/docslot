@@ -51,4 +51,3 @@ export const deletePatient = async (id) => {
   }
 };
 
-git
