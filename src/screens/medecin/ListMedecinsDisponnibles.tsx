@@ -1,14 +1,16 @@
 // src/screens/MedecinListScreen.tsx
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, Alert } from 'react-native';
+import { View, Text, StyleSheet } from 'react-native';
 import CustomFlatList from '../../componnents/C_Flatlist';
 import { getAllMedecinsDisponibles } from '../../services/medecinService';
 import C_header from '../../componnents/C_header';
 import C_button from '../../componnents/C_button';
 import { Card, Divider } from 'react-native-paper';
 import { createRendezvous } from '../../services/rdvService';
+import { useToast } from '../../utils/ToastContext';
 
-const ListMedecinsDisponibles = ({ navigation }) => {
+const ListMedecinsDisponibles = ({ navigation }: any) => {
+  const { showToast } = useToast();
   const [medecins, setMedecins] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -22,11 +24,11 @@ const ListMedecinsDisponibles = ({ navigation }) => {
           setMedecins(response.data.data);
         } else {
           setMedecins([]);
-          Alert.alert('Info', 'Aucun médecin disponible');
+          showToast('Aucun médecin disponible', 'info');
         }
       } catch (error) {
         console.log(error.message ); // debug détaillé
-        Alert.alert('Erreur', 'Impossible de charger les médecins');
+        showToast('Impossible de charger les médecins', 'error');
       } finally {
         setLoading(false);
       }
@@ -53,6 +55,7 @@ const ListMedecinsDisponibles = ({ navigation }) => {
           onPress={() =>
             navigation.navigate('MedecinCreneaux', { medecin: item })
           }
+          style={styles.rdvButton}
         />
         </View>
       </Card.Content>
@@ -66,7 +69,7 @@ const ListMedecinsDisponibles = ({ navigation }) => {
       text='Prendre un rendez-vous'
         icon="chevron-back"
         size={30}
-        onclickIcon={() => navigation.goBack()}
+        onclickIcon={() => navigation.navigate('MesRendezvous')}
       />
 
       {loading ? (
@@ -101,6 +104,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
   },
+  
   name: {
     fontSize: 16,
     fontWeight: '600',

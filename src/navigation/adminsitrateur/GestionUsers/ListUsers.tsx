@@ -1,13 +1,15 @@
 import React, { useState, useCallback } from 'react';
-import { View, Text, StyleSheet, Alert, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, ActivityIndicator } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import CustomFlatList from '../../../componnents/C_Flatlist';
 import { getAllUsers, deleteUser } from '../../../services/userService';
 import C_header from '../../../componnents/C_header';
 import C_button from '../../../componnents/C_button';
 import { Card, Divider } from 'react-native-paper';
+import { useToast } from '../../../utils/ToastContext';
 
-const ListUserScreen = ({ navigation }) => {
+const ListUserScreen = ({ navigation }: any) => {
+  const { showToast } = useToast();
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(false);
 
@@ -22,7 +24,7 @@ const ListUserScreen = ({ navigation }) => {
         setUsers([]);
       }
     } catch (error) {
-      Alert.alert('Erreur', 'Impossible de charger les utilisateurs');
+      showToast('Impossible de charger les utilisateurs', 'error');
     } finally {
       setLoading(false);
     }
@@ -35,22 +37,14 @@ const ListUserScreen = ({ navigation }) => {
   );
 
   // 🔥 LOGIQUE INCHANGÉE (soft delete côté backend)
-  const handleBlock = (id_user: number) => {
-    Alert.alert(
-      'Confirmer le blocage',
-      'Voulez-vous vraiment bloquer cet utilisateur ?',
-      [
-        { text: 'Annuler', style: 'cancel' },
-        {
-          text: 'Bloquer',
-          style: 'destructive',
-          onPress: async () => {
-            await deleteUser(id_user);
-            setUsers(users.filter(u => u.id_user !== id_user));
-          },
-        },
-      ]
-    );
+  const handleBlock = async (id_user: number) => {
+    try {
+      await deleteUser(id_user);
+      showToast('Utilisateur bloqué avec succès', 'success');
+      setUsers(users.filter(u => u.id_user !== id_user));
+    } catch (error) {
+      showToast('Erreur lors du blocage', 'error');
+    }
   };
 
   const renderItem = ({ item }: any) => (

@@ -16,7 +16,7 @@ export default function RendezVousTabs({ navigation }) {
         text="Mes rendez-vous"
         icon="chevron-back"
         size={30}
-        onclickIcon={() => navigation.goBack()}
+        onclickIcon={() => navigation.navigate('DashboardPatient')}
       />
 
       {/* ================= TABS ================= */}

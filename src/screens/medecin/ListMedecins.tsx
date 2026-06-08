@@ -1,5 +1,5 @@
 import React, { useState, useCallback } from 'react';
-import { View, Text, StyleSheet, Alert, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, ActivityIndicator } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { Card, Divider } from 'react-native-paper';
 
@@ -13,8 +13,10 @@ import {
   suspendreMedecin,
   reactiverMedecin,
 } from '../../services/medecinService';
+import { useToast } from '../../utils/ToastContext';
 
-const ListMedecins = ({ navigation }) => {
+const ListMedecins = ({ navigation }: any) => {
+  const { showToast } = useToast();
   const [medecins, setMedecins] = useState([]);
   const [loading, setLoading] = useState(false);
 
@@ -29,7 +31,7 @@ const ListMedecins = ({ navigation }) => {
         setMedecins([]);
       }
     } catch (error) {
-      Alert.alert('Erreur', 'Impossible de charger les médecins');
+      showToast('Impossible de charger les médecins', 'error');
     } finally {
       setLoading(false);
     }
@@ -41,17 +43,14 @@ const ListMedecins = ({ navigation }) => {
     }, [])
   );
 
-  const handleAction = (action: Function, id: number, message: string) => {
-    Alert.alert('Confirmation', message, [
-      { text: 'Annuler', style: 'cancel' },
-      {
-        text: 'Confirmer',
-        onPress: async () => {
-          await action(id);
-          fetchMedecins();
-        },
-      },
-    ]);
+  const handleAction = async (action: Function, id: number, message: string) => {
+    try {
+      await action(id);
+      showToast(message, 'success');
+      fetchMedecins();
+    } catch (error) {
+      showToast('Action échouée', 'error');
+    }
   };
 
   const renderItem = ({ item }: any) => (

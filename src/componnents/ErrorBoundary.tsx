@@ -1,6 +1,7 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Alert } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { handleError } from '../utils/errorHandler';
+import { useToast } from '../utils/ToastContext';
 
 interface Props {
   children: React.ReactNode;

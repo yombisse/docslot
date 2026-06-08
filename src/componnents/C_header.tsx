@@ -21,7 +21,7 @@ export default function C_header({
   iconstyle?: any;
   textstyle?: any;
   style?: any;
-  children?: React.ReactNode; // 👈 ajout pour accepter des éléments enfants
+  children?: React.ReactNode;
 }) {
   return (
     <View style={[styles.container, style]}>
@@ -52,6 +52,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 15,
     paddingVertical: 10,
     elevation: 3,
+    height:100
   },
   left: {
     flexDirection: "row",

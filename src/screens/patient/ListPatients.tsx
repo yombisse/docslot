@@ -1,13 +1,15 @@
 
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, Alert } from 'react-native';
+import { View, Text, StyleSheet } from 'react-native';
 import CustomFlatList from '../../componnents/C_Flatlist';
 import { deletePatient, getAllPatients } from '../../services/patientService';
 import C_header from '../../componnents/C_header';
 import C_button from '../../componnents/C_button';
 import { Card, Divider } from 'react-native-paper';
+import { useToast } from '../../utils/ToastContext';
 
-const ListPatientScreen = ({ navigation, route }) => {
+const ListPatientScreen = ({ navigation, route }: any) => {
+  const { showToast } = useToast();
   const [patients, setPatients] = useState([]);
 
   useEffect(() => {
@@ -19,11 +21,11 @@ const ListPatientScreen = ({ navigation, route }) => {
           setPatients(response.data.data);
         } else {
           setPatients([]);
-          Alert.alert('Info', 'Aucun patient trouvé');
+          showToast('Aucun patient trouvé', 'info');
         }
       } catch (error) {
         console.log(error);
-        Alert.alert('Erreur', 'Impossible de charger les patients');
+        showToast('Impossible de charger les patients', 'error');
       }
     };
 

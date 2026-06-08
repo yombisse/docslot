@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, StyleSheet, ScrollView, Alert, ActivityIndicator } from 'react-native';
+import { View, StyleSheet, ScrollView, ActivityIndicator } from 'react-native';
 
 import C_header from '../../componnents/C_header';
 import C_button from '../../componnents/C_button';
@@ -7,8 +7,10 @@ import C_text from '../../componnents/C_text';
 
 import { getProfile, updateUser } from '../../services/userService';
 import C_inputfields from '../../componnents/C_inputfields';
+import { useToast } from '../../utils/ToastContext';
 
-export default function ProfileMedecin({ navigation }) {
+export default function ProfileMedecin({ navigation }: any) {
+  const { showToast } = useToast();
 
   const [loading, setLoading] = useState(true);
 
@@ -46,7 +48,7 @@ export default function ProfileMedecin({ navigation }) {
 
     } catch (e) {
       console.log(e);
-      Alert.alert('Erreur', 'Impossible de charger le profil');
+      showToast('Impossible de charger le profil', 'error');
     } finally {
       setLoading(false);
     }
@@ -76,12 +78,12 @@ export default function ProfileMedecin({ navigation }) {
 
       await updateUser(payload);
 
-      Alert.alert('Succès', 'Profil mis à jour');
+      showToast('Profil mis à jour', 'success');
       navigation.goBack();
 
     } catch (e) {
       console.log(e);
-      Alert.alert('Erreur', 'Mise à jour échouée');
+      showToast('Mise à jour échouée', 'error');
     }
   };
 
@@ -100,7 +102,7 @@ export default function ProfileMedecin({ navigation }) {
       <C_header
         icon="chevron-back"
         text="Mon profil médecin"
-        onclickIcon={() => navigation.goBack()}
+        onclickIcon={() => navigation.navigate('DashboardMedecin')}
       />
 
       <ScrollView>

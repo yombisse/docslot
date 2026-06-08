@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import {
   View,
-  Alert,
   ActivityIndicator,
   StyleSheet,
   ScrollView,
@@ -14,8 +13,10 @@ import C_appSelect from '../../../componnents/C_appSelect';
 import C_header from '../../../componnents/C_header';
 import { roles } from '../../../constants/selectData';
 import { createUser, updateUser } from '../../../services/userService';
+import { useToast } from '../../../utils/ToastContext';
 
-const AddEditUserScreen = ({ route, navigation }) => {
+const AddEditUserScreen = ({ route, navigation }: any) => {
+  const { showToast } = useToast();
   const user = route?.params?.userData; 
   const isEdit = !!user;
 
@@ -39,12 +40,12 @@ const AddEditUserScreen = ({ route, navigation }) => {
 
   const handleSubmit = async () => {
     if (!nom || !prenom || !email || !role) {
-      Alert.alert('Erreur', 'Tous les champs sont obligatoires');
+      showToast('Tous les champs sont obligatoires', 'warning');
       return;
     }
 
     if (!isEdit && !password) {
-      Alert.alert('Erreur', 'Mot de passe obligatoire pour création');
+      showToast('Mot de passe obligatoire pour création', 'warning');
       return;
     }
 
@@ -73,14 +74,14 @@ const AddEditUserScreen = ({ route, navigation }) => {
 
       if (!result.success) return;
 
-      Alert.alert(
-        'Succès',
-        isEdit ? 'Utilisateur modifié avec succès' : 'Compte créé avec succès'
+      showToast(
+        isEdit ? 'Utilisateur modifié avec succès' : 'Compte créé avec succès',
+        'success'
       );
 
       navigation.goBack();
     } catch (error) {
-      Alert.alert('Erreur', 'Une erreur est survenue');
+      showToast('Une erreur est survenue', 'error');
     } finally {
       setLoading(false);
     }
@@ -92,7 +93,7 @@ const AddEditUserScreen = ({ route, navigation }) => {
         icon="chevron-back"
         text={isEdit ? 'Modifier utilisateur' : 'Créer utilisateur'}
         size={28}
-        onclickIcon={() => navigation.goBack()}
+        onclickIcon={() => navigation.navigate('ListUsers')}
       />
 
       <ScrollView contentContainerStyle={styles.container}>

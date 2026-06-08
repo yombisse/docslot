@@ -1,56 +1,87 @@
-import { Alert, Platform } from 'react-native';
-import { logError } from './errorLogger';
+import { useToast } from './ToastContext';
+
+let toastContext = null;
+
+export const setToastContext = (context) => {
+  toastContext = context;
+};
 
 export const handleError = async (error, context = {}) => {
-  console.error('Global error handler:', error, context);
-
-  let message = 'Une erreur inattendue est survenue. Réessayez dans un instant.';
-  let type = 'UNKNOWN';
-
-  if (error.response) {
-    // API/Server error
-    const status = error.response.status;
-    message = error.response.data?.message || 
-              error.response.data?.error || 
-              `Erreur du serveur (code ${status})`;
-    type = status >= 500 ? 'SERVER' : 
-           (status >= 400 ? 'VALIDATION' : 'API');
-  } else if (error.request) {
-    // Network error
-    message = 'Impossible de se connecter au serveur. Vérifiez votre connexion internet.';
-    type = 'NETWORK';
-  } else {
-    // Client/JS error
-    message = error.message || message;
-    type = 'CLIENT';
+  // LOG UNIQUEMENT EN MODE DEV (visible dans Metro / PC)
+  if (__DEV__) {
+    console.log('Global error handler:', {
+      error: error?.message,
+      status: error?.response?.status,
+      data: error?.response?.data,
+      context,
+    });
   }
 
-  const errorData = { 
-    message, 
-    type, 
-    stack: error.stack, 
-    context,
-    rawError: error.toString() 
+  let message =
+    'Une erreur inattendue est survenue. Réessayez dans un instant.';
+  let toastType = 'error';
+
+  if (error.response) {
+    const status = error.response.status;
+    const data = error.response.data;
+
+    message =
+      data?.errors?.general ||
+      Object.values(data?.errors || {})[0] ||
+      data?.message ||
+      data?.error ||
+      'Une erreur est survenue. Veuillez réessayer.';
+
+    toastType = status >= 500 ? 'error' : 'warning';
+  } else if (error.request) {
+    message =
+      'Impossible de se connecter au serveur. Vérifiez votre connexion internet.';
+    toastType = 'error';
+  } else {
+    message = error.message || message;
+    toastType = 'error';
+  }
+
+  // TOAST UNIQUEMENT (aucun log sur téléphone)
+  if (toastContext?.showToast) {
+    toastContext.showToast(message, toastType, 4000);
+  }
+
+  return {
+    success: false,
+    error: message,
+    type: toastType,
   };
-
-  // Log to backend
-  await logError(errorData);
-
-  // User feedback
-  Alert.alert('Erreur', message);
-
-  return { success: false, error: message, type };
 };
 
-// For input/saisie validation errors (synchronous)
 export const handleValidationError = (errorMsg, fieldContext = {}) => {
-  const errorData = { 
-    message: errorMsg, 
-    type: 'INPUT', 
-    context: { ...fieldContext, source: 'validation' } 
+  // LOG DEV ONLY
+  if (__DEV__) {
+    console.warn('Validation error:', {
+      message: errorMsg,
+      context: fieldContext,
+    });
+  }
+
+  if (toastContext?.showToast) {
+    toastContext.showToast(errorMsg, 'warning', 3000);
+  }
+
+  return {
+    success: false,
+    error: errorMsg,
+    type: 'warning',
   };
-  logError(errorData);
-  Alert.alert('Erreur de saisie', errorMsg);
-  return { success: false, error: errorMsg, type: 'INPUT' };
 };
 
+export const showSuccessToast = (message) => {
+  if (toastContext?.showToast) {
+    toastContext.showToast(message, 'success', 3000);
+  }
+};
+
+export const showInfoToast = (message) => {
+  if (toastContext?.showToast) {
+    toastContext.showToast(message, 'info', 3000);
+  }
+};

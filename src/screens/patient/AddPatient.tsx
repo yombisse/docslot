@@ -1,5 +1,5 @@
 // src/screens/AddPatientScreen.tsx
-import { StyleSheet, View, Alert, ScrollView } from 'react-native'
+import { StyleSheet, View, ScrollView } from 'react-native'
 import React, { useEffect, useState } from 'react'
 import { createPatient, updatePatient } from '../../services/patientService'
 import C_inputfields from '../../componnents/C_inputfields'
@@ -9,6 +9,7 @@ import C_header from '../../componnents/C_header'
 import C_appSelect from '../../componnents/C_appSelect'
 import { validate } from '../../utils/fieldsValidator'
 import PhoneInput from '../../componnents/C_phoneInput'
+import { useToast } from '../../utils/ToastContext'
 
 // Options pour le sexe
 const sexeOptions = [
@@ -16,7 +17,8 @@ const sexeOptions = [
   { label: 'Féminin', value: 'Feminin' }
 ];
 
-const AddPatient = ({ navigation, route }) => {
+const AddPatient = ({ navigation, route }: any) => {
+  const { showToast } = useToast();
   const [nom, setNom] = useState('')
   const [prenom, setPrenom] = useState('')
   const [email, setEmail] = useState('')
@@ -65,7 +67,7 @@ const AddPatient = ({ navigation, route }) => {
     );
 
     if (error) {
-      Alert.alert('Erreur', error);
+      showToast(error, 'warning');
       return;
     }
 
@@ -85,20 +87,20 @@ const AddPatient = ({ navigation, route }) => {
     try {
       if (currentPatientId) {
         await updatePatient(currentPatientId, payload);
-        Alert.alert('Succès', 'Patient modifié avec succès');
+        showToast('Patient modifié avec succès', 'success');
         navigation.goBack();
       } else {
         await createPatient(payload);
-        Alert.alert('Succès', 'Patient ajouté avec succès');
+        showToast('Patient ajouté avec succès', 'success');
         navigation.goBack();
       }
 
       // Reset form
       resetForm();
 
-    } catch (error) {
+    } catch (error: any) {
       console.log(error.response?.data || error.message);
-      Alert.alert('Erreur', error.response?.data?.message || 'Opération impossible');
+      showToast(error.response?.data?.message || 'Opération impossible', 'error');
     }
   };
 
@@ -120,7 +122,7 @@ const AddPatient = ({ navigation, route }) => {
         icon='chevron-back' 
         text={patientId ? 'Modifier Patient' : 'Ajouter Patient'} 
         size={30} 
-        onclickIcon={() => navigation.goBack()} 
+        onclickIcon={() => navigation.navigate('ListPatients')} 
       />
       
       <ScrollView contentContainerStyle={styles.container}>

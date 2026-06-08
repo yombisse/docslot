@@ -1,6 +1,6 @@
 // src/screens/EditMedecinScreen.tsx
 import React, { useState, useCallback } from 'react';
-import { View, StyleSheet, Alert, ScrollView } from 'react-native';
+import { View, StyleSheet, ScrollView } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { updateMedecin } from '../../services/medecinService';
 
@@ -10,8 +10,10 @@ import C_button from '../../componnents/C_button';
 import C_appSelect from '../../componnents/C_appSelect';
 import PhoneInput from '../../componnents/C_phoneInput';
 import { roles } from '../../constants/selectData';
+import { useToast } from '../../utils/ToastContext';
 
-const EditMedecinScreen = ({ navigation, route }) => {
+const EditMedecinScreen = ({ navigation, route }: any) => {
+  const { showToast } = useToast();
   const medecin = route?.params?.medecinData;
   const medecinId = route?.params?.medecinId;
 
@@ -51,11 +53,11 @@ const EditMedecinScreen = ({ navigation, route }) => {
 
     try {
       await updateMedecin(medecinId, payload);
-      Alert.alert('Succès', 'Médecin modifié avec succès');
+      showToast('Médecin modifié avec succès', 'success');
       navigation.goBack();
     } catch (error) {
       console.log(error);
-      Alert.alert('Erreur', 'Modification impossible');
+      showToast('Modification impossible', 'error');
     }
   };
 
@@ -65,7 +67,7 @@ const EditMedecinScreen = ({ navigation, route }) => {
         icon="chevron-back"
         text="Modifier Médecin"
         size={30}
-        onclickIcon={() => navigation.goBack()}
+        onclickIcon={() => navigation.navigate('ListMedecins')}
       />
 
       <ScrollView contentContainerStyle={styles.container}>

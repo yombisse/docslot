@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, StyleSheet, Text, ActivityIndicator, Alert } from 'react-native';
+import { View, StyleSheet, Text, ActivityIndicator } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 
 import C_header from '../../componnents/C_header';
@@ -16,8 +16,10 @@ import {
 
 import { getProfile } from '../../services/userService';
 import { buildAgendaItems } from '../../utils/formateDate';
+import { useToast } from '../../utils/ToastContext';
 
-const MesRendezVous = ({ navigation }) => {
+const MesRendezVous = ({ navigation }: any) => {
+  const { showToast } = useToast();
   const [agendaItems, setAgendaItems] = useState({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -120,7 +122,7 @@ const MesRendezVous = ({ navigation }) => {
       setModalVisible(false);
       fetchProfileAndRdv();
     } catch (error) {
-      Alert.alert('Erreur', "Impossible d'annuler le rendez-vous.");
+      showToast("Impossible d'annuler le rendez-vous", 'error');
     }
   };
 
@@ -130,7 +132,7 @@ const MesRendezVous = ({ navigation }) => {
       setModalVisible(false);
       fetchProfileAndRdv();
     } catch (error) {
-      Alert.alert('Erreur', "Impossible de confirmer le rendez-vous.");
+      showToast("Impossible de confirmer le rendez-vous", 'error');
     }
   };
 

@@ -1,8 +1,7 @@
 import React, { useState, useCallback } from 'react';
-import { View, Text, StyleSheet, Alert } from 'react-native';
+import { View, Text, StyleSheet } from 'react-native';
 import { Card, Divider } from 'react-native-paper';
 import { useFocusEffect } from '@react-navigation/native';
-
 import C_header from '../../componnents/C_header';
 import C_button from '../../componnents/C_button';
 import ModalGeneric from '../../componnents/C_Modal';
@@ -11,47 +10,43 @@ import { getCreneauxByMedecin } from '../../services/medecinService';
 import CustomFlatList from '../../componnents/C_Flatlist';
 import { formatDate, formateTime, formatTime } from '../../utils/formateDate';
 import { getEndTime } from '../../utils/getEndCreneau';
+import { useToast } from '../../utils/ToastContext';
 
-const MedecinCreneauxScreen = ({ route, navigation }) => {
+const MedecinCreneauxScreen = ({ route, navigation }: any) => {
+  const { showToast } = useToast();
   const { medecin } = route.params;
-
   const [creneaux, setCreneaux] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedCreneau, setSelectedCreneau] = useState(null);
   const [modalVisible, setModalVisible] = useState(false);
 
-  // 🔥 REFRESH à chaque retour sur l'écran
+  //  REFRESH à chaque retour sur l'écran
   useFocusEffect(
     useCallback(() => {
       fetchCreneaux();
     }, [])
   );
-const fetchCreneaux = async () => {
-  try {
-    setLoading(true);
+  const fetchCreneaux = async () => {
+    try {
+      setLoading(true);
+      const res = await getCreneauxByMedecin(medecin.id_medecin);
+      const now = Date.now();
+      const filtered = res.data.data.filter((item) => {
+        //  reconstruire proprement date + heure
+        const date = item.date_creneau.split('T')[0]; // enlève timezone
+        const datetimeStr = `${date}T${item.heure_creneau}`;
+        const time = new Date(datetimeStr).getTime();
+        return !isNaN(time) && time > now;
+      });
 
-    const res = await getCreneauxByMedecin(medecin.id_medecin);
+      setCreneaux(filtered);
 
-    const now = Date.now();
-
-    const filtered = res.data.data.filter((item) => {
-      // 🔥 reconstruire proprement date + heure
-      const date = item.date_creneau.split('T')[0]; // enlève timezone
-      const datetimeStr = `${date}T${item.heure_creneau}`;
-
-      const time = new Date(datetimeStr).getTime();
-
-      return !isNaN(time) && time > now;
-    });
-
-    setCreneaux(filtered);
-
-  } catch (err) {
-    Alert.alert('Erreur', 'Impossible de charger les créneaux');
-  } finally {
-    setLoading(false);
-  }
-};
+    } catch (err) {
+      showToast('Impossible de charger les créneaux', 'error');
+    } finally {
+      setLoading(false);
+    }
+  };
   const openModal = (creneau) => {
     setSelectedCreneau(creneau);
     setModalVisible(true);
@@ -59,20 +54,44 @@ const fetchCreneaux = async () => {
 
   const confirmRdv = async (motif) => {
   try {
-    console.log("MOTIF REÇU =", motif);
-
-    await createRendezvous({
-      id_creneau: selectedCreneau.id_creneau,
+    const rendezvousData = {
+      id_creneau: Number(selectedCreneau.id_creneau),
+      id_medecin: Number(selectedCreneau.id_medecin),
       motif: motif,
-    });
+    };
+
+    console.log('Données envoyées pour le RDV:', rendezvousData);
+
+    const result = await createRendezvous(rendezvousData);
+    console.log('RESULTAT DU SERVICE =', result);
+
+    if (!result?.success) {
+      const errMsg =
+        result?.message ||
+        result?.error ||
+        result?.errors?.general ||
+        'Créneau déjà réservé ou erreur serveur';
+
+      showToast(errMsg, 'error');
+      return;
+    }
 
     setModalVisible(false);
-    Alert.alert('Succès', 'Rendez-vous pris avec succès');
-    fetchCreneaux();
+
+    showToast('Rendez-vous pris avec succès', 'success');
+
+    navigation.navigate('MesRendezvous');
 
   } catch (error) {
-    console.log("FULL ERROR:", error.response?.data || error.message);
-    Alert.alert('Erreur', 'Créneau déjà réservé ou erreur serveur');
+    console.log('FULL ERROR:', error.response?.data || error.message);
+
+    const backendMessage =
+      error.response?.data?.errors?.general ||
+      error.response?.data?.message ||
+      error.message ||
+      'Créneau déjà réservé ou erreur serveur';
+
+    showToast(backendMessage, 'error');
   }
 };
 
@@ -104,7 +123,7 @@ const fetchCreneaux = async () => {
         text={`Dr ${medecin.nom} ${medecin.prenom}`}
         icon="chevron-back"
         size={30}
-        onclickIcon={() => navigation.goBack()}
+        onclickIcon={() => navigation.navigate('MesRendezvous')}
       />
 
       {loading ? (

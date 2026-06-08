@@ -8,8 +8,10 @@ import C_AgendaPlanner, { Slot } from '../../componnents/C_Agenda';
 import ModalGeneric from '../../componnents/C_Modal';
 import { getMyDisponibilites, annulerDisponibilite } from '../../services/disponibiliteService';
 import { buildAgendaItems, formatDate, formateDate, formateTime } from '../../utils/formateDate';
+import { useToast } from '../../utils/ToastContext';
 
-const MesDisponibilites = ({ navigation }) => {
+const MesDisponibilites = ({ navigation }: any) => {
+  const { showToast } = useToast();
   const [agendaItems, setAgendaItems] = useState({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -69,7 +71,7 @@ const MesDisponibilites = ({ navigation }) => {
       setModalVisible(false);
       fetchDisponibilites();
     } catch {
-      alert('Impossible d’annuler le créneau.');
+      showToast("Impossible d'annuler le créneau", 'error');
     }
   };
 

@@ -5,16 +5,19 @@ import C_header from '../../componnents/C_header';
 import C_button from '../../componnents/C_button';
 import {createDisponibilite} from '../../services/disponibiliteService';
 import { formatDate,formatTime } from '../../utils/formateDate';
-import C_inputfields from '../../componnents/C_inputfields';
 
-const AddDisponibilite = ({ navigation, route }) => { // <-- Récupération de navigation et route
+import { useToast } from '../../utils/ToastContext';
+
+const AddDisponibilite = ({ navigation, route }: any) => {
+  const { showToast } = useToast();
   const [date, setDate] = useState(null);
   const [heureDebut, setHeureDebut] = useState(null);
   const [heureFin, setHeureFin] = useState(null);
 
   const handlesave = async () => {
     if (!date || !heureDebut || !heureFin) {
-      return alert("Veuillez remplir tous les champs !");
+      showToast('Veuillez remplir tous les champs', 'warning');
+      return;
     }
 
     // Formatage sûr : ajout des secondes pour les heures si nécessaire
@@ -25,24 +28,35 @@ const AddDisponibilite = ({ navigation, route }) => { // <-- Récupération de n
         // Convertir en nombre ou utiliser 30 par défaut
     };
 
-    console.log("Données de disponibilité à envoyer:", disponibiliteData);
-
     try {
       const response = await createDisponibilite(disponibiliteData);
 
-      // Axios renvoie la réponse complète sous response.data
       if (response?.data?.success) {
-        alert("Disponibilité ajoutée avec succès !");
-        navigation.goBack();
+        showToast('Disponibilité ajoutée avec succès', 'success');
+        navigation.navigate('MesDisponnibilites');
       } else {
         // Affiche le détail de l'erreur provenant du backend
         console.error("Erreur backend:", response?.data);
-        alert(response?.data?.errors?.general || "Erreur inconnue");
+        const errorMsg = response?.data?.errors?.general || response?.data?.message || 'Erreur inconnue';
+        
+        // Gérer spécifiquement le cas où le créneau est déjà pris
+        if (errorMsg.toLowerCase().includes('déjà') || errorMsg.toLowerCase().includes('déjà') || errorMsg.toLowerCase().includes('existe') || errorMsg.toLowerCase().includes('chevauchement')) {
+          showToast('Ce créneau est déjà pris ou chevauche une autre disponibilité', 'error');
+        } else {
+          showToast(errorMsg, 'error');
+        }
       }
-    } catch (error) {
+    } catch (error: any) {
       // Affiche le détail complet pour comprendre le 400
       console.error("Erreur lors de la création de la disponibilité:", error.response?.data || error.message);
-      alert("Impossible de créer la disponibilité. Vérifie la console pour les détails.");
+      const errorMsg = error.response?.data?.message || error.response?.data?.errors?.general || 'Impossible de créer la disponibilité';
+      
+      // Gérer spécifiquement le cas où le créneau est déjà pris
+      if (errorMsg.toLowerCase().includes('déjà') || errorMsg.toLowerCase().includes('déjà') || errorMsg.toLowerCase().includes('existe') || errorMsg.toLowerCase().includes('chevauchement')) {
+        showToast('Ce créneau est déjà pris ou chevauche une autre disponibilité', 'error');
+      } else {
+        showToast(errorMsg, 'error');
+      }
     }
   };
   return (
@@ -51,8 +65,9 @@ const AddDisponibilite = ({ navigation, route }) => { // <-- Récupération de n
         icon="chevron-back"
         size={30}
         text="Définir une disponibilité"
-        onclickIcon={() => navigation.goBack()} // <-- navigation utilisé correctement
+        onclickIcon={() => navigation.navigate('MesDisponnibilites')}
       />
+
 
       <View style={styles.form}>
         <C_DateTimePicker
@@ -60,21 +75,27 @@ const AddDisponibilite = ({ navigation, route }) => { // <-- Récupération de n
           value={date}
           onChange={setDate}
           mode="date"
+          style={{}}
         />
+
 
         <C_DateTimePicker
           label="Heure de début"
           value={heureDebut}
           onChange={setHeureDebut}
           mode="time"
+          style={{}}
         />
+
 
         <C_DateTimePicker
           label="Heure de fin"
           value={heureFin}
           onChange={setHeureFin}
           mode="time"
+          style={{}}
         />
+
 
       </View>
       <C_button

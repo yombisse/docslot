@@ -16,6 +16,7 @@ import { getProfile } from '../../services/userService';
 import { getMyRendezvous } from '../../services/rdvService';
 import { getUnreadCount } from '../../services/notificationsService';
 import { logout } from '../../services/authService';
+import C_header from '../../componnents/C_header';
 
 export default function DashboardMedecin({ navigation }) {
 
@@ -103,7 +104,7 @@ export default function DashboardMedecin({ navigation }) {
   return (
     <View style={styles.container}>
 
-      <View style={styles.header}>
+      <C_header style={styles.header}>
         <Text style={styles.headerTitle}>Docslot</Text>
 
         <View style={styles.headerIcons}>
@@ -112,7 +113,7 @@ export default function DashboardMedecin({ navigation }) {
             onPress={() => {
                 navigation.navigate('Notification');
               }}
-            style={{ position: 'relative' }}
+            
           >
             <Ionicons name="notifications-outline" size={26} color="#fff" />
 
@@ -143,7 +144,7 @@ export default function DashboardMedecin({ navigation }) {
             ]}
           />
         </View>
-      </View>
+      </C_header>
 
       <View style={styles.bodycontainer}>
 

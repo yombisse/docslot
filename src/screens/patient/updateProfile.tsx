@@ -3,20 +3,20 @@ import {
   View,
   StyleSheet,
   ActivityIndicator,
-  Alert,
   ScrollView,
 } from 'react-native';
 
 import C_header from '../../componnents/C_header';
 import C_button from '../../componnents/C_button';
 import C_text from '../../componnents/C_text';
-
-
-import { getProfile, updateUser } from '../../services/userService';
-import { formatDate } from '../../utils/formateDate';
 import C_inputfields from '../../componnents/C_inputfields';
+import C_appSelect from '../../componnents/C_appSelect';
+import { getProfile, updateUser } from '../../services/userService';
+import { useToast } from '../../utils/ToastContext';
+import C_DateTimePicker from '../../componnents/C_datetimePicker';
 
-export default function ProfilePatient({ navigation }) {
+export default function ProfilePatient({ navigation }: any) {
+  const { showToast } = useToast();
 
   const [loading, setLoading] = useState(true);
 
@@ -47,10 +47,8 @@ export default function ProfilePatient({ navigation }) {
       setSexe(data.sexe || '');
       setDateNaissance(data.date_naissance || '');
       setRole(data.role || '');
-
     } catch (e) {
-      console.log(e);
-      Alert.alert('Erreur', 'Impossible de charger le profil');
+      showToast('Impossible de charger le profil', 'error');
     } finally {
       setLoading(false);
     }
@@ -62,7 +60,6 @@ export default function ProfilePatient({ navigation }) {
 
   const handleUpdate = async () => {
     try {
-
       const payload = {
         id_user,
         nom,
@@ -78,12 +75,10 @@ export default function ProfilePatient({ navigation }) {
 
       await updateUser(payload);
 
-      Alert.alert('Succès', 'Profil mis à jour');
+      showToast('Profil mis à jour', 'success');
       navigation.goBack();
-
     } catch (e) {
-      console.log(e);
-      Alert.alert('Erreur', 'Mise à jour impossible');
+      showToast('Mise à jour impossible', 'error');
     }
   };
 
@@ -97,40 +92,84 @@ export default function ProfilePatient({ navigation }) {
 
   return (
     <View style={styles.container}>
-
       <C_header
         text="Mon profil"
         icon="chevron-back"
-        onclickIcon={() => navigation.goBack()}
+        onclickIcon={() => navigation.navigate('DashboardPatient')}
       />
 
-      <ScrollView>
-        <View style={styles.formulaire}>
+      <ScrollView contentContainerStyle={styles.scroll}>
+        <View style={styles.card}>
 
           <C_text text="Informations personnelles" textstyle={styles.title} />
 
-          <C_inputfields placeholder="Nom" value={nom} onChangeText={setNom} containerstyle={styles.form}/>
-          <C_inputfields placeholder="Prénom" value={prenom} onChangeText={setPrenom} containerstyle={styles.form}/>
-          <C_inputfields placeholder="Email" value={email} onChangeText={setEmail} containerstyle={styles.form}/>
-          <C_inputfields placeholder="Téléphone" value={telephone} onChangeText={setTelephone} containerstyle={styles.form}/>
-          <C_inputfields placeholder="Adresse" value={adresse} onChangeText={setAdresse} containerstyle={styles.form} />
-          <C_inputfields placeholder="Sexe" value={sexe} onChangeText={setSexe} containerstyle={styles.form} />
-
           <C_inputfields
-            placeholder="Date de naissance (YYYY-MM-DD)"
-            value={formatDate(dateNaissance)}
-            onChangeText={setDateNaissance}
-            containerstyle={styles.form}
+            placeholder="Nom"
+            value={nom}
+            onChangeText={setNom}
+            containerstyle={styles.input}
           />
 
-          <C_text text={`Rôle : ${role}`} textstyle={{ marginTop: 10, fontWeight: 'bold' }} />
+          <C_inputfields
+            placeholder="Prénom"
+            value={prenom}
+            onChangeText={setPrenom}
+            containerstyle={styles.input}
+          />
+
+          <C_inputfields
+            placeholder="Email"
+            value={email}
+            onChangeText={setEmail}
+            containerstyle={styles.input}
+          />
+
+          <C_inputfields
+            placeholder="Téléphone"
+            value={telephone}
+            onChangeText={setTelephone}
+            keyboardType="phone-pad"
+            containerstyle={styles.input}
+          />
+
+          <C_inputfields
+            placeholder="Adresse"
+            value={adresse}
+            onChangeText={setAdresse}
+            containerstyle={styles.input}
+          />
+
+          <C_appSelect
+            label="Sexe"
+            value={sexe}
+            onChange={setSexe}
+            placeholder="Sélectionner le sexe"
+            data={[
+              { label: 'Masculin', value: 'Masculin' },
+              { label: 'Féminin', value: 'Feminin' },
+            ]}
+          />
+
+          <C_DateTimePicker
+            label="Date de naissance"
+            value={dateNaissance ? new Date(dateNaissance) : null}
+            mode="date"
+            onChange={(date) =>
+              setDateNaissance(date.toISOString().split('T')[0])
+            }
+            style={styles.input}
+          />
+
+          <View style={styles.roleBox}>
+            <C_text text={`Rôle : ${role}`} textstyle={styles.roleText} />
+          </View>
 
           <C_inputfields
             placeholder="Nouveau mot de passe"
             value={password}
             onChangeText={setPassword}
             secureTextEntry
-            containerstyle={styles.form}
+            containerstyle={styles.input}
           />
 
           <C_button
@@ -141,40 +180,65 @@ export default function ProfilePatient({ navigation }) {
 
         </View>
       </ScrollView>
-
     </View>
   );
 }
-
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f6f8fb',
+    backgroundColor: '#f2f5f9',
   },
+
   center: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
   },
-  form: {
-    height:50,
-    borderRadius:5,
-    marginVertical:10
+
+  scroll: {
+    paddingBottom: 30,
   },
-  formulaire:{
-      justifyContent:'center',
-      padding:10
+
+  card: {
+    margin: 15,
+    padding: 15,
+    borderRadius: 15,
+    backgroundColor: '#fff',
+    elevation: 3,
   },
+
   title: {
     fontSize: 18,
-    fontWeight: 'bold',
+    fontWeight: '700',
     marginBottom: 15,
+    color: '#1f2937',
   },
-  button: {
-    marginTop: 25,
+
+  input: {
     height: 50,
     borderRadius: 10,
+    marginBottom: 12,
+    paddingHorizontal: 10,
+  },
+
+  button: {
+    marginTop: 20,
+    height: 50,
+    borderRadius: 12,
     justifyContent: 'center',
     alignItems: 'center',
+  },
+
+  roleBox: {
+    marginTop: 10,
+    marginBottom: 10,
+    padding: 10,
+    backgroundColor: '#eef2ff',
+    borderRadius: 10,
+  },
+
+  roleText: {
+    fontWeight: '600',
+    color: '#3730a3',
   },
 });
