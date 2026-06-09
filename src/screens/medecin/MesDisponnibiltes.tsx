@@ -140,7 +140,10 @@ const MesDisponibilites = ({ navigation }: any) => {
   // ================= UI =================
   return (
     <View style={{ flex: 1 }}>
-      <C_header icon="chevron-back" size={30} onclickIcon={() => navigation.goBack()} />
+      <C_header icon="chevron-back" size={30} 
+      text="Mes disponibilités"
+      textStyle={{ fontSize: 18, fontWeight: 'bold',textAlign:'center',flex:1 }}
+      onclickIcon={() => navigation.navigate('DashboardMedecin')} />
 
       {loading ? (
         <View style={styles.centerContainer}>

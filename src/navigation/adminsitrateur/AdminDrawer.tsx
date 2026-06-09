@@ -1,15 +1,14 @@
-import React, { useState, useCallback } from "react";
-import { View, Text, StyleSheet } from "react-native";
+import React, { useState, useEffect } from "react";
+import { View, Text, StyleSheet, Alert } from "react-native";
 
 import {
   createDrawerNavigator,
   DrawerContentScrollView,
   DrawerItemList,
-  DrawerItem
+  DrawerItem,
 } from "@react-navigation/drawer";
 
 import Ionicons from "react-native-vector-icons/Ionicons";
-import { useFocusEffect } from "@react-navigation/native";
 
 import AdminNavigator from "./adminNavigator";
 import Userstack from "./GestionUsers/Userstack";
@@ -17,15 +16,14 @@ import Patientstack from "./GestionUsers/Patientstack";
 import Medecinstack from "./GestionUsers/Medecinstack";
 import PatientAgendaScreen from "../../screens/patient/Rdv";
 import NotificationScreen from "../../screens/patient/NotificationScreen";
-
+import ListRdvAdmin from "../../screens/admin/ListRendezvousScreen";
 import { logout } from "../../services/authService";
 import { getUnreadCount } from "../../services/notificationsService";
+import { CommonActions } from "@react-navigation/native";
 
 const Drawer = createDrawerNavigator();
 
-// ================= CUSTOM DRAWER =================
 function CustomDrawerContent(props) {
-
   const [unread, setUnread] = useState(0);
 
   const loadUnread = async () => {
@@ -37,22 +35,39 @@ function CustomDrawerContent(props) {
     }
   };
 
-  useFocusEffect(
-    useCallback(() => {
-      loadUnread();
-    }, [])
-  );
+  useEffect(() => {
+    loadUnread();
+  }, []);
 
-  const handleLogout = async () => {
-    try {
-      await logout();
-      props.navigation.reset({
-        index: 0,
-        routes: [{ name: "Login" }],
-      });
-    } catch (e) {
-      console.log(e);
-    }
+  const handleLogout = () => {
+    Alert.alert(
+      "Déconnexion",
+      "Voulez-vous vraiment vous déconnecter ?",
+      [
+        {
+          text: "Annuler",
+          style: "cancel",
+        },
+        {
+          text: "Se déconnecter",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              await logout();
+
+              props.navigation.dispatch(
+                CommonActions.reset({
+                  index: 0,
+                  routes: [{ name: "Auth" }],
+                })
+              );
+            } catch (e) {
+              console.log(e);
+            }
+          },
+        },
+      ]
+    );
   };
 
   return (
@@ -60,7 +75,7 @@ function CustomDrawerContent(props) {
 
       <DrawerItemList {...props} />
 
-      {/* 🔔 NOTIFICATIONS AVEC BADGE */}
+      {/* NOTIFICATIONS */}
       <DrawerItem
         label="Notifications"
         icon={({ color, size }) => (
@@ -79,10 +94,10 @@ function CustomDrawerContent(props) {
         onPress={() => props.navigation.navigate("Notifications")}
       />
 
-      {/* 🚪 LOGOUT */}
+      {/* LOGOUT */}
       <DrawerItem
         label="Déconnexion"
-        icon={({ color }) => (
+        icon={() => (
           <Ionicons name="log-out-outline" size={22} color="red" />
         )}
         labelStyle={{ color: "red" }}
@@ -93,7 +108,6 @@ function CustomDrawerContent(props) {
   );
 }
 
-// ================= DRAWER =================
 export default function AdminDrawer() {
   return (
     <Drawer.Navigator
@@ -134,7 +148,7 @@ export default function AdminDrawer() {
         component={Patientstack}
         options={{
           drawerIcon: ({ color, size }) => (
-            <Ionicons name="people-outline" size={size} color={color} />
+            <Ionicons name="person-outline" size={size} color={color} />
           ),
         }}
       />
@@ -151,7 +165,7 @@ export default function AdminDrawer() {
 
       <Drawer.Screen
         name="RendezVous"
-        component={PatientAgendaScreen}
+        component={ListRdvAdmin}
         options={{
           drawerIcon: ({ color, size }) => (
             <Ionicons name="calendar-outline" size={size} color={color} />
@@ -163,7 +177,7 @@ export default function AdminDrawer() {
         name="Notifications"
         component={NotificationScreen}
         options={{
-          drawerItemStyle: { display: "none" }
+          drawerItemStyle: { display: "none" },
         }}
       />
 
@@ -171,7 +185,6 @@ export default function AdminDrawer() {
   );
 }
 
-// ================= STYLE =================
 const styles = StyleSheet.create({
   badge: {
     position: "absolute",

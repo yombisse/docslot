@@ -67,18 +67,32 @@ export default function ProfilePatient({ navigation }: any) {
         email,
         telephone,
         adresse,
-        sexe,
         date_naissance: dateNaissance,
         role,
+        sexe,
         ...(password.trim() !== '' && { password }),
       };
 
-      await updateUser(payload);
+      const response = await updateUser(payload);
 
-      showToast('Profil mis à jour', 'success');
-      navigation.goBack();
-    } catch (e) {
-      showToast('Mise à jour impossible', 'error');
+      if (response?.data?.success) {
+        showToast('Profil mis à jour', 'success');
+        navigation.goBack();
+      } 
+    } catch (error: any) {
+      const errors = error?.data?.errors || error?.response?.data?.errors;
+
+      if (errors) {
+        const firstError = Object.values(errors)[0] as string;
+        showToast(firstError, 'error');
+      } else {
+        showToast(
+          error?.data?.message ||
+          error?.response?.data?.message ||
+          'Mise à jour impossible',
+          'error'
+        );
+      }
     }
   };
 

@@ -1,6 +1,7 @@
 import React from "react";
-import { StyleSheet, Text, View } from "react-native";
-import Ionicons from 'react-native-vector-icons/Ionicons';
+import { StyleSheet, Text, View, TouchableOpacity } from "react-native";
+import Ionicons from "react-native-vector-icons/Ionicons";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 export default function C_header({
   children,
@@ -12,32 +13,36 @@ export default function C_header({
   iconstyle,
   textstyle,
   style,
-}: {
-  text: string;
-  icon?: string;
-  onclickIcon?: () => void;
-  size?: number;
-  color?: string;
-  iconstyle?: any;
-  textstyle?: any;
-  style?: any;
-  children?: React.ReactNode;
-}) {
+}: any) {
+  const insets = useSafeAreaInsets();
+
   return (
-    <View style={[styles.container, style]}>
+    <View
+      style={[
+        styles.container,
+        { paddingTop: insets.top + 10 }, 
+        style,
+      ]}
+    >
       <View style={styles.left}>
         {icon && (
-          <Ionicons
-            name={icon}
-            size={size || 24}
-            color={color || "#fff"}
-            style={[styles.icon, iconstyle]}
-            onPress={onclickIcon}
-          />
+          <TouchableOpacity onPress={onclickIcon}>
+            <Ionicons
+              name={icon}
+              size={size || 24}
+              color={color || "#fff"}
+              style={iconstyle}
+            />
+          </TouchableOpacity>
         )}
-        <Text style={[styles.text, textstyle]}>{text}</Text>
+
+        {text ? (
+          <Text style={[styles.text, textstyle]} numberOfLines={1}>
+            {text}
+          </Text>
+        ) : null}
       </View>
-  
+
       <View style={styles.right}>{children}</View>
     </View>
   );
@@ -48,27 +53,31 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    backgroundColor: "#2BB673", // couleur principale Docslot
-    paddingHorizontal: 15,
-    paddingVertical: 10,
-    elevation: 3,
-    height:100
+
+    backgroundColor: "#2BB673",
+
+    paddingHorizontal: 16,
+    paddingBottom: 12,
   },
+
   left: {
     flexDirection: "row",
-    alignItems: "center",
+    justifyContent: "flex-start",
+    flex: 1,
   },
-  icon: {
-    marginRight: 10,
-  },
+
   text: {
-    fontSize: 22,
-    fontWeight: "bold",
+    fontSize: 18,
+    fontWeight: "700",
     color: "#fff",
-    letterSpacing: 0.5,
+    flexShrink: 1,
+    textAlign: "center",
+    marginLeft:60
   },
+
   right: {
     flexDirection: "row",
     alignItems: "center",
+    gap: 14,
   },
 });

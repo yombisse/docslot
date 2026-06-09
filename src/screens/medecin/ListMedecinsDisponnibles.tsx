@@ -5,29 +5,38 @@ import CustomFlatList from '../../componnents/C_Flatlist';
 import { getAllMedecinsDisponibles } from '../../services/medecinService';
 import C_header from '../../componnents/C_header';
 import C_button from '../../componnents/C_button';
-import { Card, Divider } from 'react-native-paper';
-import { createRendezvous } from '../../services/rdvService';
+import { Card } from 'react-native-paper';
 import { useToast } from '../../utils/ToastContext';
 
 const ListMedecinsDisponibles = ({ navigation }: any) => {
   const { showToast } = useToast();
-  const [medecins, setMedecins] = useState([]);
+  const [medecins, setMedecins] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchMedecins = async () => {
       try {
         setLoading(true);
+
         const response = await getAllMedecinsDisponibles();
-        console.log('Médecins disponibles', response.data); // debug
+
         if (response.data.success && response.data.data) {
-          setMedecins(response.data.data);
+          
+          const filtered = response.data.data.filter(
+            (m: any) => (m.nb_creneaux_disponibles || 0) > 0
+          );
+
+          setMedecins(filtered);
+
+          if (filtered.length === 0) {
+            showToast('Aucun médecin disponible', 'info');
+          }
         } else {
           setMedecins([]);
           showToast('Aucun médecin disponible', 'info');
         }
-      } catch (error) {
-        console.log(error.message ); // debug détaillé
+      } catch (error: any) {
+        console.log(error?.message);
         showToast('Impossible de charger les médecins', 'error');
       } finally {
         setLoading(false);
@@ -37,36 +46,63 @@ const ListMedecinsDisponibles = ({ navigation }: any) => {
     fetchMedecins();
   }, []);
 
+  
+  const renderItem = ({ item }: any) => {
+    const hasImage = item.profile_url && item.profile_url.length > 0;
 
-  const renderItem = ({ item }) => (
-    <Card style={styles.cardContainer} elevation={2}>
-      <Card.Content>
-        <View style={styles.infoContainer}>
-          <View style={{ flex: 1 }}>
-            <Text style={styles.name}>{item.nom} {item.prenom}</Text>
-            <Text style={styles.speciality}>{item.specialite}</Text>
-            <Text style={styles.dispo}>
-              {item.nb_creneaux_disponibles } créneaux disponibles
+    const initials =
+      (item.nom?.charAt(0) || '') + (item.prenom?.charAt(0) || '');
+
+    return (
+      <Card style={styles.card} elevation={4}>
+        <View style={styles.row}>
+
+          {/* AVATAR */}
+          {hasImage ? (
+            <Image
+              source={{ uri: item.profile_url }}
+              style={styles.avatarImage}
+            />
+          ) : (
+            <View style={styles.avatarFallback}>
+              <Text style={styles.avatarText}>{initials}</Text>
+            </View>
+          )}
+
+          {/* INFOS */}
+          <View style={styles.info}>
+            <Text style={styles.name}>
+              Dr {item.nom} {item.prenom}
             </Text>
-          </View>
 
-          <C_button
+            <Text style={styles.speciality}>
+              {item.specialite}
+            </Text>
+
+            <View style={styles.badge}>
+              <Text style={styles.badgeText}>
+                {item.nb_creneaux_disponibles} créneaux disponibles
+              </Text>
+            </View>
+          </View>
+        </View>
+
+        {/* ACTION */}
+        <C_button
           title="Voir les créneaux"
           onPress={() =>
             navigation.navigate('MedecinCreneaux', { medecin: item })
           }
-          style={styles.rdvButton}
+          style={styles.button}
         />
-        </View>
-      </Card.Content>
-      <Divider />
-    </Card>
-  );
+      </Card>
+    );
+  };
 
   return (
     <View style={{ flex: 1 }}>
       <C_header
-      text='Prendre un rendez-vous'
+        text="Prendre un rendez-vous"
         icon="chevron-back"
         size={30}
         onclickIcon={() => navigation.navigate('MesRendezvous')}
@@ -75,7 +111,7 @@ const ListMedecinsDisponibles = ({ navigation }: any) => {
       {loading ? (
         <Text style={styles.loadingText}>Chargement...</Text>
       ) : medecins.length === 0 ? (
-        <Text style={{ textAlign: 'center', marginTop: 20 }}>
+        <Text style={styles.emptyText}>
           Aucun médecin disponible
         </Text>
       ) : (
@@ -90,42 +126,116 @@ const ListMedecinsDisponibles = ({ navigation }: any) => {
   );
 };
 
+export default ListMedecinsDisponibles;
+
 const styles = StyleSheet.create({
-  cardContainer: {
-    marginHorizontal: 10,
-    marginVertical: 5,
-    paddingVertical: 10,
-    borderRadius: 10,
-    overflow: 'hidden',
-    justifyContent: 'center',
+  card: {
+    marginHorizontal: 12,
+    marginVertical: 10,
+    borderRadius: 18,
+    backgroundColor: '#fff',
+
+    // shadow Android
+    elevation: 6,
+
+    // shadow iOS
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.12,
+    shadowRadius: 8,
   },
-  infoContainer: {
+
+  // ROW PRINCIPALE (IMPORTANT UX)
+  row: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
+    padding: 15,
   },
-  
+
+  // AVATAR IMAGE
+  avatarImage: {
+    width: 72,
+    height: 72,
+    borderRadius: 36,
+    marginRight: 12,
+  },
+
+  // FALLBACK AVATAR
+  avatarFallback: {
+    width: 72,
+    height: 72,
+    borderRadius: 36,
+    backgroundColor: '#2BB673',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 12,
+  },
+
+  avatarText: {
+    color: '#fff',
+    fontSize: 20,
+    fontWeight: '700',
+  },
+
+  // INFO BLOCK
+  info: {
+    flex: 1,
+  },
+
   name: {
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: '700',
+    color: '#111827',
   },
+
   speciality: {
-    fontSize: 14,
+    fontSize: 13,
     color: '#2BB673',
     marginTop: 3,
+    fontWeight: '500',
   },
-  dispo: {
-    fontSize: 12,
-    color: '#666',
-    marginTop: 2,
-  },
-  rdvButton: {
-    backgroundColor: '#2BB673',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 5,
-  },
-  loadingText: { textAlign: 'center', marginTop: 20, fontSize: 14 },
-});
 
-export default ListMedecinsDisponibles;
+  // BADGE DISPONIBILITÉ
+  badge: {
+    marginTop: 8,
+    alignSelf: 'flex-start',
+    backgroundColor: '#EAF7F0',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 20,
+  },
+
+  badgeText: {
+    fontSize: 12,
+    color: '#1B7A4A',
+    fontWeight: '600',
+  },
+
+  // BUTTON
+  button: {
+    marginHorizontal: 12,
+    marginBottom: 12,
+    borderRadius: 12,
+    height: 44,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+
+  // STATES
+  loadingText: {
+    textAlign: 'center',
+    marginTop: 20,
+    fontSize: 14,
+    color: '#6B7280',
+  },
+
+  emptyText: {
+    textAlign: 'center',
+    marginTop: 20,
+    fontSize: 14,
+    color: '#6B7280',
+  },
+});

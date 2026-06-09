@@ -6,10 +6,12 @@ import {
   FlatList,
   ActivityIndicator,
   TouchableOpacity,
+  Alert,
 } from 'react-native';
 
 import { useFocusEffect } from '@react-navigation/native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
+
 import C_button from '../../componnents/C_button';
 import ProfileMenu from '../auth/ProfileMenu';
 import { getProfile } from '../../services/userService';
@@ -24,6 +26,13 @@ export default function DashboardMedecin({ navigation }) {
   const [rdvs, setRdvs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [unread, setUnread] = useState(0);
+  const [todayLabel, setTodayLabel] = useState('Rendez-vous');
+
+  const normalizeDate = (date) => {
+    return date?.toString()?.split('T')[0];
+  };
+
+  const getToday = () => new Date().toISOString().split('T')[0];
 
   const fetchData = async () => {
     try {
@@ -34,15 +43,30 @@ export default function DashboardMedecin({ navigation }) {
       setUser(userData);
 
       const rdvRes = await getMyRendezvous();
+      const allRdvs = rdvRes?.data?.data || [];
 
-      const today = new Date().toISOString().split('T')[0];
+      const today = getToday();
 
-      const todayRdv = (rdvRes?.data?.data || []).filter((r) => {
-        const rdvDate = r.date_rdv?.toString().split('T')[0];
-        return rdvDate === today;
-      });
+      const todayRdv = allRdvs.filter(
+        (r) => normalizeDate(r.date_rdv) === today
+      );
 
-      setRdvs(todayRdv);
+      const upcomingRdv = allRdvs
+        .filter((r) => normalizeDate(r.date_rdv) >= today)
+        .sort(
+          (a, b) =>
+            new Date(a.date_rdv).getTime() -
+            new Date(b.date_rdv).getTime()
+        )
+        .slice(0, 5);
+
+      if (todayRdv.length > 0) {
+        setRdvs(todayRdv);
+        setTodayLabel("Rendez-vous aujourd’hui");
+      } else {
+        setRdvs(upcomingRdv);
+        setTodayLabel("Prochains rendez-vous");
+      }
 
     } catch (e) {
       console.log('Erreur dashboard médecin', e);
@@ -54,7 +78,7 @@ export default function DashboardMedecin({ navigation }) {
   const loadUnread = async () => {
     try {
       const res = await getUnreadCount();
-      setUnread(res.data.total);
+      setUnread(res?.data?.total || 0);
     } catch (e) {
       console.log('Erreur notif badge', e);
     }
@@ -71,11 +95,25 @@ export default function DashboardMedecin({ navigation }) {
     }, [])
   );
 
-  const handleLogout = async () => {
-    const result = await logout();
-    if (result) {
-      navigation.replace('Login');
-    }
+  const handleLogout = () => {
+    Alert.alert(
+      'Déconnexion',
+      'Voulez-vous vraiment vous déconnecter ?',
+      [
+        { text: 'Annuler', style: 'cancel' },
+        {
+          text: 'Se déconnecter',
+          style: 'destructive',
+          onPress: async () => {
+            await logout();
+            navigation.reset({
+              index: 0,
+              routes: [{ name: 'Auth', params: { screen: 'Login' } }],
+            });
+          },
+        },
+      ]
+    );
   };
 
   const renderItem = ({ item }) => (
@@ -85,7 +123,10 @@ export default function DashboardMedecin({ navigation }) {
       </Text>
 
       <View style={{ flex: 1 }}>
-        <Text style={styles.motif}>{item.motif}</Text>
+        <Text style={styles.motif}>
+          {item.motif || 'Consultation'}
+        </Text>
+
         <Text style={styles.patient}>
           {item.patient_nom} {item.patient_prenom}
         </Text>
@@ -104,46 +145,40 @@ export default function DashboardMedecin({ navigation }) {
   return (
     <View style={styles.container}>
 
-      <C_header style={styles.header}>
-        <Text style={styles.headerTitle}>Docslot</Text>
+      <C_header text="Docslot">
 
-        <View style={styles.headerIcons}>
+        <TouchableOpacity
+          onPress={() => navigation.navigate('Notification')}
+          style={{ position: 'relative' }}
+        >
+          <Ionicons name="notifications-outline" size={26} color="#fff" />
 
-          <TouchableOpacity
-            onPress={() => {
-                navigation.navigate('Notification');
-              }}
-            
-          >
-            <Ionicons name="notifications-outline" size={26} color="#fff" />
+          {unread > 0 && (
+            <View style={styles.badge}>
+              <Text style={styles.badgeText}>
+                {unread > 99 ? '99+' : unread}
+              </Text>
+            </View>
+          )}
+        </TouchableOpacity>
 
-            {unread > 0 && (
-              <View style={styles.badge}>
-                <Text style={styles.badgeText}>
-                  {unread > 99 ? '99+' : unread}
-                </Text>
-              </View>
-            )}
-          </TouchableOpacity>
+        <ProfileMenu
+          navigation={navigation}
+          icon="person-circle-outline"
+          items={[
+            {
+              icon: "person-outline",
+              label: "Mon profil",
+              onPress: () => navigation.navigate('ProfileMedecin'),
+            },
+            {
+              icon: "log-out",
+              label: "Déconnexion",
+              onPress: handleLogout,
+            },
+          ]}
+        />
 
-          <ProfileMenu
-            navigation={navigation}
-            icon="person-circle-outline"
-            items={[
-              {
-                icon: "person-outline",
-                label: "Mon profil",
-                onPress: () => navigation.navigate('ProfileMedecin'),
-              },
-              {
-                icon: "log-out",
-                label: "Deconnexion",
-                onPress: () =>
-                  navigation.navigate('Auth', { screen: 'Login' }),
-              },
-            ]}
-          />
-        </View>
       </C_header>
 
       <View style={styles.bodycontainer}>
@@ -153,12 +188,12 @@ export default function DashboardMedecin({ navigation }) {
         </Text>
 
         <Text style={styles.sectionTitle}>
-          Rendez-vous aujourd’hui
+          {todayLabel}
         </Text>
 
         {rdvs.length === 0 ? (
           <Text style={styles.empty}>
-            Aucun rendez-vous aujourd’hui
+            Aucun rendez-vous disponible
           </Text>
         ) : (
           <FlatList

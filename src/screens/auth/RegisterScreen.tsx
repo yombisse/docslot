@@ -18,6 +18,7 @@ export default function RegisterScreen({ navigation }: any) {
     
     const handleRegister = async () => {
     if (loading) return;
+
     setLoading(true);
 
     const emailTrimmed = email.trim();
@@ -25,50 +26,60 @@ export default function RegisterScreen({ navigation }: any) {
     const confirmTrimmed = confirmPassword.trim();
 
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
     if (!emailTrimmed) {
       showToast('Email est obligatoire', 'warning');
+      setLoading(false);
       return;
     }
+
     if (!emailRegex.test(emailTrimmed)) {
       showToast('Format email invalide', 'warning');
+      setLoading(false);
       return;
     }
+
     if (!passwordTrimmed) {
       showToast('Mot de passe est obligatoire', 'warning');
+      setLoading(false);
       return;
     }
+
     if (passwordTrimmed.length < 6) {
       showToast('Mot de passe trop court (min 6 caractères)', 'warning');
+      setLoading(false);
       return;
     }
+
     if (!confirmTrimmed) {
       showToast('Confirmation mot de passe est obligatoire', 'warning');
+      setLoading(false);
       return;
     }
+
     if (passwordTrimmed !== confirmTrimmed) {
       showToast('Les mots de passe ne correspondent pas', 'warning');
+      setLoading(false);
       return;
     }
 
     try {
-      const response = await registerUser({
+      const result = await registerUser({
         email: emailTrimmed,
         password: passwordTrimmed,
       });
 
+      if (!result.success) {
+        setLoading(false);
+        return; // message déjà géré par le service
+      }
+
       showToast('Compte créé avec succès', 'success');
       navigation.replace('Login');
-
-    } catch (error: any) {
-      console.log('ERROR FULL:', error);
-      console.log('ERROR RESPONSE:', error.response);
-      console.log('ERROR MESSAGE:', error.message);
-      showToast(error.response?.data?.message || 'Erreur inscription', 'error');
     } finally {
       setLoading(false);
     }
   };
-
   return (
         <ImageBackground
           source={require("../../assets/fond.jpg")}

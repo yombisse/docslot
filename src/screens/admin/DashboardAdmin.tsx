@@ -117,7 +117,7 @@ const DashboardAdmin = ({ navigation }) => {
             title="Rendez-vous"
             icon="calendar-outline"
             color="#f39c12"
-            onPress={() => navigation.navigate('ListR')}
+            onPress={() => navigation.navigate('AllRendezvous')}
           />
 
         </View>

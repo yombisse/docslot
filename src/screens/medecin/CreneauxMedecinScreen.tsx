@@ -1,115 +1,125 @@
 import React, { useState, useCallback } from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet, Alert } from 'react-native';
 import { Card, Divider } from 'react-native-paper';
 import { useFocusEffect } from '@react-navigation/native';
+
 import C_header from '../../componnents/C_header';
 import C_button from '../../componnents/C_button';
-import ModalGeneric from '../../componnents/C_Modal';
+
 import { createRendezvous } from '../../services/rdvService';
 import { getCreneauxByMedecin } from '../../services/medecinService';
+
 import CustomFlatList from '../../componnents/C_Flatlist';
-import { formatDate, formateTime, formatTime } from '../../utils/formateDate';
+import { formatDate, formateTime } from '../../utils/formateDate';
 import { getEndTime } from '../../utils/getEndCreneau';
 import { useToast } from '../../utils/ToastContext';
 
 const MedecinCreneauxScreen = ({ route, navigation }: any) => {
   const { showToast } = useToast();
   const { medecin } = route.params;
+
   const [creneaux, setCreneaux] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [selectedCreneau, setSelectedCreneau] = useState(null);
-  const [modalVisible, setModalVisible] = useState(false);
 
-  //  REFRESH à chaque retour sur l'écran
+  // 🔄 refresh à chaque focus
   useFocusEffect(
     useCallback(() => {
       fetchCreneaux();
     }, [])
   );
+
   const fetchCreneaux = async () => {
     try {
       setLoading(true);
       const res = await getCreneauxByMedecin(medecin.id_medecin);
+
       const now = Date.now();
+
       const filtered = res.data.data.filter((item) => {
-        //  reconstruire proprement date + heure
-        const date = item.date_creneau.split('T')[0]; // enlève timezone
+        const date = item.date_creneau.split('T')[0];
         const datetimeStr = `${date}T${item.heure_creneau}`;
         const time = new Date(datetimeStr).getTime();
+
         return !isNaN(time) && time > now;
       });
 
       setCreneaux(filtered);
-
     } catch (err) {
       showToast('Impossible de charger les créneaux', 'error');
     } finally {
       setLoading(false);
     }
   };
-  const openModal = (creneau) => {
-    setSelectedCreneau(creneau);
-    setModalVisible(true);
+
+  // ✅ CONFIRMATION MODERNE (ALERT)
+  const confirmRdv = (creneau: any) => {
+    Alert.alert(
+      'Confirmer le rendez-vous',
+      `Médecin : Dr ${medecin.nom} ${medecin.prenom}
+Spécialité : ${medecin.specialite}
+
+Date : ${formatDate(creneau.date_creneau)}
+Heure : ${formateTime(creneau.heure_creneau)} - ${getEndTime(
+        creneau.heure_creneau,
+        creneau.duree_creneau
+      )}
+
+Voulez-vous confirmer ce rendez-vous ?`,
+      [
+        {
+          text: 'Annuler',
+          style: 'cancel',
+        },
+        {
+          text: 'Confirmer',
+          onPress: async () => {
+            try {
+              const result = await createRendezvous({
+                id_creneau: Number(creneau.id_creneau),
+                id_medecin: Number(creneau.id_medecin),
+              });
+
+              if (!result?.success) {
+                showToast(
+                  result?.message ||
+                    result?.error ||
+                    'Créneau déjà réservé',
+                  'error'
+                );
+                return;
+              }
+
+              showToast('Rendez-vous pris avec succès', 'success');
+              navigation.navigate('MesRendezvous');
+            } catch (error: any) {
+              showToast(
+                error?.response?.data?.message ||
+                  'Erreur lors de la réservation',
+                'error'
+              );
+            }
+          },
+        },
+      ]
+    );
   };
 
-  const confirmRdv = async (motif) => {
-  try {
-    const rendezvousData = {
-      id_creneau: Number(selectedCreneau.id_creneau),
-      id_medecin: Number(selectedCreneau.id_medecin),
-      motif: motif,
-    };
-
-    console.log('Données envoyées pour le RDV:', rendezvousData);
-
-    const result = await createRendezvous(rendezvousData);
-    console.log('RESULTAT DU SERVICE =', result);
-
-    if (!result?.success) {
-      const errMsg =
-        result?.message ||
-        result?.error ||
-        result?.errors?.general ||
-        'Créneau déjà réservé ou erreur serveur';
-
-      showToast(errMsg, 'error');
-      return;
-    }
-
-    setModalVisible(false);
-
-    showToast('Rendez-vous pris avec succès', 'success');
-
-    navigation.navigate('MesRendezvous');
-
-  } catch (error) {
-    console.log('FULL ERROR:', error.response?.data || error.message);
-
-    const backendMessage =
-      error.response?.data?.errors?.general ||
-      error.response?.data?.message ||
-      error.message ||
-      'Créneau déjà réservé ou erreur serveur';
-
-    showToast(backendMessage, 'error');
-  }
-};
-
-  const renderItem = ({ item }) => (
+  const renderItem = ({ item }: any) => (
     <Card style={styles.cardContainer} elevation={2}>
       <Card.Content>
         <View style={styles.infoContainer}>
           <View>
             <Text style={styles.date}>{formatDate(item.date_creneau)}</Text>
             <Text style={styles.time}>
-              {formateTime(item.heure_creneau)} - {getEndTime(item.heure_creneau, item.duree_creneau)}
+              {formateTime(item.heure_creneau)} -{' '}
+              {getEndTime(item.heure_creneau, item.duree_creneau)}
             </Text>
           </View>
 
           <C_button
             title="Prendre RDV"
             style={styles.buttonRdv}
-            onPress={() => openModal(item)}
+            onPress={() => confirmRdv(item)}
           />
         </View>
       </Card.Content>
@@ -136,23 +146,6 @@ const MedecinCreneauxScreen = ({ route, navigation }: any) => {
           title="Créneaux disponibles"
         />
       )}
-
-      <ModalGeneric
-        visible={modalVisible}
-        title="Prendre rendez-vous"
-        details={[
-          { label: 'Médecin', value: `Dr ${medecin.nom} ${medecin.prenom}` },
-          { label: 'Spécialité', value: medecin.specialite },
-          { label: 'Date', value: formatDate(selectedCreneau?.date_creneau || '') },
-          { label: 'Heure', value: `${formateTime(selectedCreneau?.heure_creneau || '')} - ${getEndTime(selectedCreneau?.heure_creneau || '', selectedCreneau?.duree_creneau || 0)}` },
-        ]}
-        showInput={true}
-        inputPlaceholder="Motif du rendez-vous"
-        confirmText="Confirmer"
-        cancelText="Annuler"
-        onClose={() => setModalVisible(false)}
-        onConfirm={confirmRdv}
-      />
     </View>
   );
 };

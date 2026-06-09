@@ -12,10 +12,9 @@ import { getProfile } from '../../services/userService';
 import C_button from '../../componnents/C_button';
 import C_RdvDetailsModal from '../../componnents/C_modalConfirm';
 import { getAllRendezvous, getMyRendezvous } from '../../services/rdvService';
-import C_header from '../../componnents/C_header';
-import { formateTime, formatTime } from '../../utils/formateDate';
+import { formateTime } from '../../utils/formateDate';
 
-export default function PatientAgendaScreen({navigation}) {
+export default function PatientAgendaScreen({ navigation }) {
   const [sections, setSections] = useState([]);
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -31,7 +30,6 @@ export default function PatientAgendaScreen({navigation}) {
     try {
       setLoading(true);
 
-      
       const profileResult = await getProfile();
       const profileData = profileResult?.data?.data;
 
@@ -42,15 +40,10 @@ export default function PatientAgendaScreen({navigation}) {
 
       setUser(profileData);
 
-  
-      let rdvResponse;
-
-      if (profileData.role === 'administrateur') {
-        rdvResponse = await getAllRendezvous();
-      } else {
-        
-        rdvResponse = await getMyRendezvous()
-      }
+      let rdvResponse =
+        profileData.role === 'administrateur'
+          ? await getAllRendezvous()
+          : await getMyRendezvous();
 
       const rdvs = rdvResponse?.data?.data;
 
@@ -59,53 +52,65 @@ export default function PatientAgendaScreen({navigation}) {
         return;
       }
 
-   const grouped = {};
+      const grouped = {};
 
-  rdvs.forEach((rdv) => {
-    const rawDate = rdv.date_rdv; 
+      rdvs.forEach((rdv) => {
+        const rawDate = rdv.date_rdv;
 
-    const dateKey = new Date(rawDate).toLocaleDateString('fr-FR', {
-      weekday: 'long',
-      day: 'numeric',
-      month: 'long',
-    });
+        const dateKey = new Date(rawDate).toLocaleDateString('fr-FR', {
+          weekday: 'long',
+          day: 'numeric',
+          month: 'long',
+        });
 
-    if (!grouped[dateKey]) {
-      grouped[dateKey] = {
-        rawDate,
-        data: [],
-      };
-    }
+        if (!grouped[dateKey]) {
+          grouped[dateKey] = {
+            rawDate,
+            data: [],
+          };
+        }
 
-    grouped[dateKey].data.push(rdv);
-  });
+        grouped[dateKey].data.push(rdv);
+      });
 
-  const sectionsData = Object.entries(grouped)
-    .sort((a, b) => new Date(a[1].rawDate) - new Date(b[1].rawDate))
-    .map(([title, value]) => ({
-      title,
-      data: value.data,
-    }));
+      const sectionsData = Object.entries(grouped)
+        .sort((a, b) => new Date(a[1].rawDate) - new Date(b[1].rawDate))
+        .map(([title, value]) => ({
+          title,
+          data: value.data.sort(
+            (a, b) =>
+              new Date(`1970-01-01T${a.heure_rdv}`) -
+              new Date(`1970-01-01T${b.heure_rdv}`)
+          ),
+        }));
+
       setSections(sectionsData);
     } catch (err) {
-      console.error('fetch error:', err);
+      console.log(err);
       setSections([]);
     } finally {
       setLoading(false);
     }
   };
 
-  
-  const renderItem = ({ item }) => {
-    const isAdmin = user?.role === 'administrateur';
-    const isMedecin = user?.role === 'medecin';
+  const getStatusStyle = (status) => {
+    switch (status) {
+      case 'confirme':
+        return styles.statusConfirmed;
+      case 'en_attente':
+        return styles.statusPending;
+      case 'annule':
+        return styles.statusCanceled;
+      default:
+        return styles.statusPending;
+    }
+  };
 
+  const renderItem = ({ item }) => {
     const name =
-      isAdmin
-        ? `${item?.patient_nom ?? ''} ${item?.patient_prenom ?? ''} → ${item?.medecin_nom ?? ''} ${item?.medecin_prenom ?? ''}`.trim()
-        : isMedecin
-        ? `${item?.patient_nom ?? ''} ${item?.patient_prenom ?? ''}`.trim()
-        : `${item?.medecin_nom ?? ''} ${item?.medecin_prenom ?? ''}`.trim();
+      user?.role === 'administrateur'
+        ? `${item.patient_nom} ${item.patient_prenom} → ${item.medecin_nom} ${item.medecin_prenom}`
+        : `${item.medecin_nom} ${item.medecin_prenom}`;
 
     return (
       <TouchableOpacity
@@ -114,29 +119,29 @@ export default function PatientAgendaScreen({navigation}) {
           setSelectedItem(item);
           setModalVisible(true);
         }}
+        activeOpacity={0.85}
       >
-        {/* TIME */}
         <View style={styles.timeBox}>
-          <Text style={styles.time}>
-            {formateTime(item.heure_rdv)}
-          </Text>
+          <Text style={styles.time}>{formateTime(item.heure_rdv)}</Text>
         </View>
 
-        {/* CONTENT */}
         <View style={styles.content}>
-          <Text style={styles.title}>
-            {item?.motif ?? 'Sans motif'} - {name}
+          <Text style={styles.title} numberOfLines={1}>
+            {item.motif || 'Consultation'} - {name}
           </Text>
 
-          <Text style={styles.status}>
-            {(item?.statut ?? 'en_attente').toUpperCase()}
-          </Text>
+          
+
+          <View style={[styles.status, getStatusStyle(item.statut)]}>
+            <Text style={styles.statusText}>
+              {item.statut.toUpperCase()}
+            </Text>
+          </View>
         </View>
       </TouchableOpacity>
     );
   };
 
-  
   if (loading) {
     return (
       <View style={styles.loader}>
@@ -145,33 +150,28 @@ export default function PatientAgendaScreen({navigation}) {
     );
   }
 
-  
   return (
     <View style={styles.container}>
-      
       <SectionList
         sections={sections}
         keyExtractor={(item) => item.id_rdv?.toString()}
         renderSectionHeader={({ section }) => (
-          <Text style={styles.dateTitle}>{section.title}</Text>
+          <Text style={styles.sectionTitle}>{section.title}</Text>
         )}
         renderItem={renderItem}
         contentContainerStyle={{ paddingBottom: 120 }}
       />
 
-      {/* SWITCH VIEW (sauf admin) */}
       {user?.role !== 'administrateur' && (
         <C_button
-          title={view === 'agenda' ? 'Voir Historique' : 'Voir Agenda'}
+          title={view === 'agenda' ? 'Voir historique' : 'Voir agenda'}
           onPress={() =>
             setView(view === 'agenda' ? 'historique' : 'agenda')
           }
           style={styles.btn}
-          textstyle={{ color: '#fff' }}
         />
       )}
 
-      {/* MODAL */}
       <C_RdvDetailsModal
         visible={modalVisible}
         rdv={selectedItem}
@@ -181,10 +181,11 @@ export default function PatientAgendaScreen({navigation}) {
     </View>
   );
 }
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f6f8fb',
+    backgroundColor: '#F6F8FB',
   },
 
   loader: {
@@ -193,68 +194,80 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
 
-  dateTitle: {
-    fontSize: 15,
-    fontWeight: '800',
+  sectionTitle: {
+    fontSize: 14,
+    fontWeight: '700',
     marginVertical: 12,
-    marginHorizontal: 10,
+    marginHorizontal: 15,
     color: '#2BB673',
     textTransform: 'capitalize',
-    letterSpacing: 0.3,
   },
 
   card: {
     flexDirection: 'row',
-    backgroundColor: '#ffffff',
-    paddingVertical: 14,
-    paddingHorizontal: 12,
+    backgroundColor: '#fff',
+    marginHorizontal: 15,
+    marginBottom: 12,
     borderRadius: 14,
-    marginBottom: 10,
-    elevation: 3,
-    shadowColor: '#000',
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
-    shadowOffset: { width: 0, height: 3 },
+    padding: 14,
+    elevation: 2,
   },
 
   timeBox: {
-    width: 65,
+    width: 70,
     justifyContent: 'center',
     alignItems: 'center',
     borderRightWidth: 1,
-    borderRightColor: '#eee',
-    marginRight: 12,
+    borderRightColor: '#EEE',
   },
 
   time: {
+    fontSize: 14,
     fontWeight: '800',
-    fontSize: 13,
     color: '#2BB673',
   },
 
   content: {
     flex: 1,
-    justifyContent: 'center',
+    paddingLeft: 12,
   },
 
   title: {
     fontSize: 14,
-    fontWeight: '600',
-    color: '#2c3e50',
-    marginBottom: 6,
-    lineHeight: 18,
+    fontWeight: '700',
+    color: '#2C3E50',
+  },
+
+  subtitle: {
+    fontSize: 12,
+    color: '#7F8C8D',
+    marginTop: 3,
   },
 
   status: {
+    marginTop: 8,
     alignSelf: 'flex-start',
-    fontSize: 11,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 20,
+  },
+
+  statusText: {
+    fontSize: 10,
     fontWeight: '800',
     color: '#fff',
+  },
+
+  statusConfirmed: {
     backgroundColor: '#2BB673',
-    paddingHorizontal: 10,
-    paddingVertical: 3,
-    borderRadius: 20,
-    overflow: 'hidden',
+  },
+
+  statusPending: {
+    backgroundColor: '#F39C12',
+  },
+
+  statusCanceled: {
+    backgroundColor: '#E74C3C',
   },
 
   btn: {
@@ -265,11 +278,5 @@ const styles = StyleSheet.create({
     backgroundColor: '#2BB673',
     padding: 14,
     borderRadius: 12,
-    alignItems: 'center',
-    elevation: 5,
-    shadowColor: '#000',
-    shadowOpacity: 0.12,
-    shadowRadius: 8,
-    shadowOffset: { width: 0, height: 3 },
   },
 });
